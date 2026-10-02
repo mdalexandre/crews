@@ -1,8 +1,40 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/crews-logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/crews-logo-light.svg">
+    <img alt="crews" src="docs/assets/crews-logo-light.svg" width="420">
+  </picture>
+</p>
+
+<p align="center"><b>One task. A planned crew.</b><br>A Claude Code plugin that lets one AI agent bring in a crew of other AI agents, each planned for its role.</p>
+
 # crews
 
-Crews is a plugin for Claude Code that turns a task into a crew plan: task specific roles, each seated on a fixed model and effort, with the number of workers computed from four typed answers. A seat guard hook then refuses generic or unplanned subagent dispatches, so delegation goes through the plan.
+Crews is a plugin for Claude Code that turns a task into a crew plan: task specific roles, each seated on a fixed model and effort, with the number of workers computed from four typed answers. A seat guard hook then refuses generic subagents and any crew seat dispatch that no plan returned, so crew delegation goes through the plan.
 
 This is an independent project for Claude Code. It is not affiliated with or endorsed by Anthropic.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/crews-how-it-works-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/crews-how-it-works-light.svg">
+    <img alt="How crews works: describe roles, build a deterministic plan where each role gets a seat (model and effort), a guard that admits a crew seat only when it matches a plan and refuses generic agents, and one wave per kind in the order research, produce, integrate, check." src="docs/assets/crews-how-it-works-light.svg" width="100%">
+  </picture>
+</p>
+
+## What a crew is
+
+The word comes from the Old French *creue*, "an increase", and before that from the Latin *crescere*, "to grow". A *creue* was a reinforcement: the extra people sent in so a small force could take on something bigger. That is what this plugin does for an AI agent working in Claude Code.
+
+When the agent (or you) has a job too big for one context, it does not improvise helpers. It writes down the crew it needs, and crews turns that into a plan:
+
+* **Roles.** Each member of the crew is a role named for what it does to what in this task, with a mission, a deliverable, a write scope and acceptance criteria. A role is one of four kinds: research, produce, integrate or check.
+* **Seats.** Every role gets a seat: a fixed model at a fixed effort, chosen from the catalog by the kind of work and how hard it is. Routine work lands on a cheaper seat; hard reasoning on a stronger one. The same roles and answers always give the same plan.
+* **Waves.** Seats are grouped into one wave per kind, always in the order research, produce, integrate, check. The calls in a wave are issued together and run in parallel; the next wave starts after the whole wave has returned. So checks always come after the work they check.
+* **A blind check.** A check role receives its criteria and the paths of the work, never the producer's conclusion, so its verdict is independent.
+* **The guard.** A seat guard hook sits in front of every subagent dispatch. A crew seat is admitted only when the call matches a plan made in the last 24 hours, and a generic agent (`general-purpose`, `claude`, or no type at all) is refused. Other named agents are not affected.
+
+The planner itself dispatches nothing. It returns the exact Agent calls; the session issues them.
 
 ## Install
 

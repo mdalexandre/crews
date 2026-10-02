@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">crews icon</title>
+  <desc id="desc">An amber terminal prompt leads into three connected ivory execution paths on a dark graphite square.</desc>
+  <rect width="512" height="512" fill="#111419"/>
+  <g transform="translate(45.3 118.8) scale(.98)">
+    <path fill="#FFB04A" d="M0 66 90 151 0 236V178L26 151 0 124Z"/>
+    <path fill="#F4F1E8" d="M96 108H176L288 0H430V50H312L210 142H264L318 108H430V158H318L278 190H246L304 230H430V280H254L176 198H96L138 151Z"/>
+  </g>
+</svg>

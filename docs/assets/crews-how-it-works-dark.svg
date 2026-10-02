@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="870" viewBox="0 0 1800 870" role="img" aria-labelledby="title desc">
+  <title id="title">How crews works: roles, plan, guard, waves</title>
+  <desc id="desc">A developer or lead AI agent in Claude Code writes roles, each specifying what it does, what it delivers, and a work kind: produce, check, research, or integrate. crews creates a deterministic plan: the same roles give the same plan. Every role gets a seat consisting of a specific model and effort level, matched to difficulty: easier work gets a cheaper seat and harder work a stronger seat. Seats are grouped into one wave per kind, always in the order research, produce, integrate, check. Seats in a wave run in parallel and the next wave starts when all of them finish. Every agent dispatch is checked against the plan by a seat guard; planned seats pass, and unplanned crew seats and generic agents are blocked; other named agents are not affected. Checkers receive only the work and criteria, never the producer's conclusion.</desc>
+  <style>
+    text { font-family: "DejaVu Sans", Arial, sans-serif; font-kerning: none; font-variant-ligatures: none; }
+    .bold { font-weight: 700; }
+    .mono { font-family: "DejaVu Sans Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+  </style>
+  <g fill="#F4F1E8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0" y="0" width="1800" height="870" fill="#111419"/>
+    <path d="M52,56 L71,75 L52,94" fill="none" stroke="#FFB04A" stroke-width="7"/>
+    <text x="92" y="88" font-size="40" class="bold">One task. A planned crew.</text>
+    <text x="1750" y="85" font-size="27" class="mono" fill="#AEB8C5" text-anchor="end">crews</text>
+
+    <rect x="50" y="151" width="38" height="34" rx="5" fill="#30271D"/>
+    <text x="69" y="176" font-size="21" class="mono" fill="#FFB04A" text-anchor="middle">01</text>
+    <text x="101" y="177" font-size="28" class="bold">Describe roles</text>
+
+    <rect x="410" y="151" width="38" height="34" rx="5" fill="#30271D"/>
+    <text x="429" y="176" font-size="21" class="mono" fill="#FFB04A" text-anchor="middle">02</text>
+    <text x="461" y="177" font-size="28" class="bold">Build a plan</text>
+
+    <rect x="837" y="151" width="38" height="34" rx="5" fill="#30271D"/>
+    <text x="856" y="176" font-size="21" class="mono" fill="#FFB04A" text-anchor="middle">03</text>
+    <text x="888" y="177" font-size="28" class="bold">Guard</text>
+
+    <rect x="1060" y="151" width="38" height="34" rx="5" fill="#30271D"/>
+    <text x="1079" y="176" font-size="21" class="mono" fill="#FFB04A" text-anchor="middle">04</text>
+    <text x="1111" y="177" font-size="28" class="bold">Run in waves</text>
+
+    <rect x="50" y="211" width="300" height="383" rx="10" fill="#191E25" stroke="#465260" stroke-width="2"/>
+    <text x="74" y="251" font-size="23" class="bold" textLength="246.62" lengthAdjust="spacingAndGlyphs">Developer / lead AI</text>
+    <text x="74" y="282" font-size="22" fill="#AEB8C5">in Claude Code</text>
+    <path d="M74,306 L326,306" fill="none" stroke="#465260" stroke-width="2"/>
+    <text x="77" y="348" font-size="23" class="mono" fill="#FFB04A">&gt;</text>
+    <text x="107" y="348" font-size="24" textLength="151.58" lengthAdjust="spacingAndGlyphs">What it does</text>
+    <text x="77" y="389" font-size="23" class="mono" fill="#FFB04A">&gt;</text>
+    <text x="107" y="389" font-size="24" textLength="189.07" lengthAdjust="spacingAndGlyphs">What it delivers</text>
+    <text x="74" y="440" font-size="22" fill="#AEB8C5">Work kind</text>
+
+    <rect x="74" y="461" width="129" height="40" rx="4" fill="#202731"/>
+    <text x="138.5" y="488" font-size="19" class="mono" text-anchor="middle" textLength="80.07" lengthAdjust="spacingAndGlyphs">produce</text>
+    <rect x="215" y="461" width="111" height="40" rx="4" fill="#202731"/>
+    <text x="270.5" y="488" font-size="19" class="mono" text-anchor="middle" textLength="57.19" lengthAdjust="spacingAndGlyphs">check</text>
+    <rect x="74" y="514" width="129" height="40" rx="4" fill="#202731"/>
+    <text x="138.5" y="541" font-size="19" class="mono" text-anchor="middle" textLength="91.51" lengthAdjust="spacingAndGlyphs">research</text>
+    <rect x="215" y="514" width="111" height="40" rx="4" fill="#202731"/>
+    <text x="270.5" y="541" font-size="19" class="mono" text-anchor="middle" textLength="102.95" lengthAdjust="spacingAndGlyphs">integrate</text>
+
+    <path d="M359,391 L399,391 M390,385 L399,391 L390,397" fill="none" stroke="#FFB04A" stroke-width="3"/>
+
+    <rect x="410" y="211" width="370" height="383" rx="10" fill="#191E25" stroke="#465260" stroke-width="2"/>
+    <text x="434" y="254" font-size="29" class="bold">Deterministic</text>
+    <text x="434" y="291" font-size="24" fill="#FFB04A" textLength="294.38" lengthAdjust="spacingAndGlyphs">Same roles → same plan</text>
+    <path d="M434,313 L756,313" fill="none" stroke="#465260" stroke-width="2"/>
+    <text x="434" y="350" font-size="25" class="bold" textLength="295.62" lengthAdjust="spacingAndGlyphs">Each role gets a seat</text>
+    <rect x="434" y="371" width="322" height="52" rx="5" fill="#30271D"/>
+    <text x="595" y="406" font-size="26" class="mono" fill="#FFB04A" text-anchor="middle">model + effort</text>
+    <text x="434" y="461" font-size="24" textLength="248.71" lengthAdjust="spacingAndGlyphs">Easy → cheaper seat</text>
+    <text x="434" y="500" font-size="24" textLength="253.78" lengthAdjust="spacingAndGlyphs">Hard → stronger seat</text>
+    <text x="434" y="559" font-size="23" fill="#AEB8C5" textLength="298.54" lengthAdjust="spacingAndGlyphs">Seats grouped into waves</text>
+
+    <path d="M792,391 L838,391 M829,385 L838,391 L829,397" fill="none" stroke="#FFB04A" stroke-width="3"/>
+
+    <text x="929" y="257" font-size="25" class="bold" text-anchor="middle">In plan?</text>
+    <path d="M877,287 L860,304 L860,357 M860,426 L860,478 L877,495" fill="none" stroke="#465260" stroke-width="5"/>
+    <path d="M978,287 L995,304 L995,357 M995,426 L995,478 L978,495" fill="none" stroke="#465260" stroke-width="5"/>
+    <path d="M856,391 L1042,391 M1033,385 L1042,391 L1033,397" fill="none" stroke="#FFB04A" stroke-width="5"/>
+    <rect x="897" y="335" width="63" height="40" rx="5" fill="#30271D"/>
+    <text x="928.5" y="363" font-size="22" class="mono" fill="#FFB04A" text-anchor="middle">yes</text>
+    <path d="M907,456 L913,462 L924,448" fill="none" stroke="#FFB04A" stroke-width="3"/>
+    <text x="937" y="464" font-size="23" fill="#FFB04A">pass</text>
+    <text x="929" y="542" font-size="21" fill="#AEB8C5" text-anchor="middle">Every dispatch</text>
+
+    <rect x="1060" y="211" width="690" height="383" rx="10" fill="#191E25" stroke="#465260" stroke-width="2"/>
+    <text x="1084" y="245" font-size="20" fill="#AEB8C5">Illustrative plan</text>
+
+    <text x="1151.5" y="296" font-size="22" class="mono" text-anchor="middle">research</text>
+    <text x="1320.5" y="296" font-size="22" class="mono" text-anchor="middle">produce</text>
+    <text x="1489.5" y="296" font-size="22" class="mono" text-anchor="middle">integrate</text>
+    <text x="1658.5" y="296" font-size="22" class="mono" text-anchor="middle">check</text>
+
+    <rect x="1084" y="322" width="135" height="58" rx="7" fill="#202731" stroke="#465260" stroke-width="2"/>
+    <path d="M1100,341 L1109,351 L1100,361" fill="none" stroke="#FFB04A" stroke-width="3"/>
+    <text x="1124" y="358" font-size="21" class="mono">seat</text>
+    <rect x="1084" y="400" width="135" height="58" rx="7" fill="#202731" stroke="#465260" stroke-width="2"/>
+    <path d="M1100,419 L1109,429 L1100,439" fill="none" stroke="#FFB04A" stroke-width="3"/>
+    <text x="1124" y="436" font-size="21" class="mono">seat</text>
+
+    <rect x="1253" y="322" width="135" height="58" rx="7" fill="#202731" stroke="#465260" stroke-width="2"/>
+    <path d="M1269,341 L1278,351 L1269,361" fill="none" stroke="#FFB04A" stroke-width="3"/>
+    <text x="1293" y="358" font-size="21" class="mono">seat</text>
+    <rect x="1253" y="400" width="135" height="58" rx="7" fill="#202731" stroke="#465260" stroke-width="2"/>
+    <path d="M1269,419 L1278,429 L1269,439" fill="none" stroke="#FFB04A" stroke-width="3"/>
+    <text x="1293" y="436" font-size="21" class="mono">seat</text>
+
+    <rect x="1422" y="361" width="135" height="58" rx="7" fill="#202731" stroke="#465260" stroke-width="2"/>
+    <path d="M1438,380 L1447,390 L1438,400" fill="none" stroke="#FFB04A" stroke-width="3"/>
+    <text x="1462" y="397" font-size="21" class="mono">seat</text>
+
+    <rect x="1591" y="361" width="135" height="58" rx="7" fill="#202731" stroke="#465260" stroke-width="2"/>
+    <path d="M1607,380 L1616,390 L1607,400" fill="none" stroke="#FFB04A" stroke-width="3"/>
+    <text x="1631" y="397" font-size="21" class="mono">seat</text>
+
+    <path d="M1224,390 L1248,390 M1240,384 L1248,390 L1240,396" fill="none" stroke="#FFB04A" stroke-width="3"/>
+    <path d="M1393,390 L1417,390 M1409,384 L1417,390 L1409,396" fill="none" stroke="#FFB04A" stroke-width="3"/>
+    <path d="M1562,390 L1586,390 M1578,384 L1586,390 L1578,396" fill="none" stroke="#FFB04A" stroke-width="3"/>
+
+    <text x="1405" y="510" font-size="22" text-anchor="middle">One wave per kind, always in this order</text>
+    <text x="1405" y="546" font-size="19" fill="#AEB8C5" text-anchor="middle">A wave runs its seats in parallel. The next starts when all finish.</text>
+
+    <rect x="50" y="637" width="949" height="172" rx="9" fill="#2D2025"/>
+    <text x="74" y="676" font-size="22" class="mono" fill="#FF8D89">NO UNPLANNED CREW SEATS</text>
+    <rect x="74" y="701" width="380" height="69" rx="6" fill="#191E25" stroke="#465260" stroke-width="2"/>
+    <text x="264" y="744" font-size="22" text-anchor="middle" textLength="350" lengthAdjust="spacingAndGlyphs">unplanned seat / generic agent</text>
+    <path d="M470,735 L925,735 L925,604" fill="none" stroke="#FF8D89" stroke-width="3"/>
+    <path d="M915,580 L935,600 M915,600 L935,580" fill="none" stroke="#FF8D89" stroke-width="3"/>
+    <text x="524" y="718" font-size="25" fill="#FF8D89">blocked by guard</text>
+
+    <rect x="1060" y="637" width="690" height="172" rx="9" fill="#30271D"/>
+    <text x="1084" y="676" font-size="22" class="mono" fill="#FFB04A">CHECKER INPUTS</text>
+    <path d="M1087,714 L1093,720 L1104,706" fill="none" stroke="#FFB04A" stroke-width="3"/>
+    <text x="1122" y="722" font-size="27" class="bold">Work + criteria only</text>
+    <path d="M1087,758 L1101,772 M1087,772 L1101,758" fill="none" stroke="#FF8D89" stroke-width="3"/>
+    <text x="1122" y="773" font-size="25" fill="#FF8D89" textLength="405.47" lengthAdjust="spacingAndGlyphs">Never the producer’s conclusion</text>
+  </g>
+</svg>

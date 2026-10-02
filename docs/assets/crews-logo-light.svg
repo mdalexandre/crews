@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="title desc">
+  <title id="title">crews</title>
+  <desc id="desc">Fork logo for light backgrounds: an amber terminal prompt leads into three connected execution paths beside the lowercase crews wordmark. Transparent background; all lettering is drawn as paths.</desc>
+  <g transform="translate(40 40)">
+    <path fill="#B86B12" d="M0 66 90 151 0 236V178L26 151 0 124Z"/>
+    <path fill="#18212B" d="M96 108H176L288 0H430V50H312L210 142H264L318 108H430V158H318L278 190H246L304 230H430V280H254L176 198H96L138 151Z"/>
+  </g>
+  <g transform="translate(550 110) scale(.92 1.16)" fill="#18212B" fill-rule="evenodd" aria-label="crews">
+    <path d="M128 0H48Q0 0 0 48V72Q0 120 48 120H128V89H50Q32 89 32 72V48Q32 31 50 31H128Z"/>
+    <path d="M148 120V42Q148 0 190 0H240V31H192Q180 31 180 44V120Z"/>
+    <path d="M384 48V74H290V77Q290 90 306 90H384V120H305Q258 120 258 74V46Q258 0 305 0H339Q384 0 384 48ZM290 48H352V44Q352 31 338 31H306Q290 31 290 44Z"/>
+    <path d="M400 0H434L453 78 474 0H505L526 78 545 0H579L546 120H510L489 49 468 120H432Z"/>
+    <path d="M720 0V30H644Q628 30 628 39Q628 48 645 48H676Q720 48 720 83Q720 120 674 120H596V90H670Q688 90 688 81Q688 72 672 72H640Q596 72 596 37Q596 0 642 0Z"/>
+  </g>
+</svg>
