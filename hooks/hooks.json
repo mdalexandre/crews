@@ -6,16 +6,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
+            "command": "sh",
             "args": [
-              "${CLAUDE_PLUGIN_ROOT}/hooks/seat_guard.py"
+              "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh",
+              "seat_guard.py"
             ]
           },
           {
             "type": "command",
-            "command": "python3",
+            "command": "sh",
             "args": [
-              "${CLAUDE_PLUGIN_ROOT}/hooks/qa_leak_check.py"
+              "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh",
+              "qa_leak_check.py"
             ]
           }
         ]
@@ -25,9 +27,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
+            "command": "sh",
             "args": [
-              "${CLAUDE_PLUGIN_ROOT}/hooks/inline_budget.py",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh",
+              "inline_budget.py",
               "pre"
             ]
           }
@@ -39,9 +42,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
+            "command": "sh",
             "args": [
-              "${CLAUDE_PLUGIN_ROOT}/hooks/session_start.py"
+              "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh",
+              "session_start.py"
             ]
           }
         ]
@@ -52,9 +56,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
+            "command": "sh",
             "args": [
-              "${CLAUDE_PLUGIN_ROOT}/hooks/inline_budget.py",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh",
+              "inline_budget.py",
               "prompt"
             ]
           }
@@ -67,9 +72,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
+            "command": "sh",
             "args": [
-              "${CLAUDE_PLUGIN_ROOT}/hooks/inline_budget.py",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh",
+              "inline_budget.py",
               "post"
             ]
           }

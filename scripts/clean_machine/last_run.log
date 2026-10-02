@@ -1,0 +1,76 @@
+crews clean-machine run
+date_utc: 2026-10-02T16:59:12Z
+repo_head: 5ed5cc46e748846240d2623d78ae7c3d09fdadc0 plus working tree b9351f41c8c9ff911a89c3f71420fb03c3647192 (19 changed paths)
+host: Linux 7.1.5-76070105-generic, Docker version 29.8.1
+container: --memory 4g, non-root user, no environment variables passed, no credential mounted
+----
+image built: crews-clean-machine:5ed5cc4
+
+PHASE 0 environment
+FACT claude 2.1.287 (Claude Code)
+FACT uv uv 0.11.6 (x86_64-unknown-linux-gnu)
+FACT node v22.23.3
+FACT user tester uid=1001 home=/home/tester
+FACT python3 on PATH: none (only what uv fetches)
+FACT credential-looking env vars: 0
+FACT claude login state: none (no credential of any kind in the container)
+
+PHASE 1 clone from the git archive
+CHECK PASS clone: 147 tracked files, no gitignored caches (git archive)
+
+PHASE 2 install from the clone
+Adding marketplace…✔ Successfully added marketplace: crews (declared in user settings)
+Installing plugin "crews@crews"...✔ Successfully installed plugin: crews@crews (scope: user)
+4 userConfig options not yet set — run /plugin configure crews@crews in Claude Code, or pass --config KEY=VALUE.
+Installed plugins:
+
+  ❯ crews@crews
+    Version: 0.1.0
+    Scope: user
+    Status: ✔ enabled
+CHECK PASS plugin_installed: crews@crews enabled
+FACT installed plugin dir: /home/tester/.claude/plugins/cache/crews/crews/0.1.0
+CHECK PASS installed_copy: found .mcp.json and hooks/seat_guard.py
+FACT plugin data dir (plugin@marketplace id): /home/tester/.claude/plugins/data/crews-crews
+
+PHASE 3 Claude Code launches the declared server itself (claude mcp list, no login)
+Checking MCP server health…
+
+plugin:crews:crews: uv run --project /home/tester/clone --frozen python /home/tester/clone/server.py - ✔ Connected
+CHECK PASS claude_mcp_list: server Connected
+CHECK PASS data_dir_created_by_claude: venv 
+
+PHASE 4 stdio: crew_catalog, crew_plan, guard (installed copy, manifest command, uv only)
+CHECK PASS no_python3_on_path: which python3 on the machine PATH = None
+CHECK PASS hook_declared_argv: sh /home/tester/.claude/plugins/cache/crews/crews/0.1.0/hooks/run.sh seat_guard.py
+CHECK PASS server_command: uv run --project /home/tester/.claude/plugins/cache/crews/crews/0.1.0 --frozen python /home/tester/.claude/plugins/cache/crews/crews/0.1.0/server.py
+/home/tester/.claude/plugins/data/crews-crews/venv/lib/python3.14/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+  warnings.warn(
+CHECK PASS tools_listed: crew_budget, crew_catalog, crew_check, crew_plan
+CHECK PASS crew_catalog: status=COMPLETED keys=['seats', 'version']
+CHECK PASS crew_plan: status=COMPLETED errors=[]
+CHECK PASS plan_returned_calls: 2 wave(s), 5 call(s)
+CHECK PASS guard_admits_planned_call: exit=0 subagent_type=crews:crew-produce-sonnet-medium stderr=''
+CHECK PASS guard_blocks_general_purpose: exit=2 stderr='crews-seat-guard: general-purpose is a generic agent. Delegation goes through claude-crews'
+CHECK PASS guard_blocks_edited_planned_call: exit=2
+RESULT PASS failed=[]
+CHECK PASS stdio_driver: all driver checks passed
+
+PHASE 5 uninstall
+✔ Successfully uninstalled plugin: crews (scope: user)
+✔ Successfully removed marketplace: crews
+CHECK PASS uninstalled: crews@crews not listed
+CHECK PASS data_dir_removed: /home/tester/.claude/plugins/data/crews-crews is gone
+CHECK PASS no_home_crews: ~/.crews never created
+CHECK PASS no_user_agents: no seat files in ~/.claude/agents
+FACT crew-*.md count right after uninstall (outside the checkout): 26
+FACT example leftover: /home/tester/.claude/plugins/cache/crews/crews/0.1.0/agents/crew-produce-sonnet-medium.md
+FACT example leftover: /home/tester/.claude/plugins/cache/crews/crews/0.1.0/agents/crew-check-sonnet-medium.md
+FACT orphan markers: /home/tester/.claude/plugins/cache/crews/crews/0.1.0/.orphaned_at 
+CHECK PASS no_seat_files_outside_orphaned_cache: 0 outside the orphaned plugin cache
+
+PHASE 6 documented removal of the orphaned cache (OSS-DOC-6 instruction)
+CHECK PASS nothing_left: 0 crew-*.md anywhere under ~/.claude, no data dir
+
+RESULT_CLEAN_MACHINE PASS
+container_exit: 0

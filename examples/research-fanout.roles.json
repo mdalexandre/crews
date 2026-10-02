@@ -1,0 +1,22 @@
+{
+  "task": "survey how the open source http clients in this repository handle request retries",
+  "roles": [
+    {
+      "name": "retry-policy-surveyor",
+      "kind": "research",
+      "mission": "survey how each http client module in the repository implements request retries and backoff",
+      "deliverable": "retry-survey-record.md",
+      "slices": [
+        {"brief": "survey the retry handling in the synchronous client modules under src/sync"},
+        {"brief": "survey the retry handling in the asynchronous client modules under src/aio"},
+        {"brief": "survey the retry handling in the shared transport helpers under src/transport"}
+      ],
+      "read_scope": ["src"],
+      "acceptance": [
+        "every client module under src is covered by at least one finding",
+        "each finding names the file and line where the retry decision is made"
+      ],
+      "answers": {"need": "bounded_retrieval", "difficulty": 1, "divisible": 0.9, "specific": 0.9}
+    }
+  ]
+}

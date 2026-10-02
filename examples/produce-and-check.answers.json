@@ -1,0 +1,6 @@
+{
+  "need": {"choice": "everyday_implementation", "confidence": 0.8, "probabilities": {"everyday_implementation": 0.8, "repeatable_task": 0.2}},
+  "difficulty": {"score": 1.0},
+  "divisible": {"noul": 0.3},
+  "needs_verifier": {"noul": 0.9}
+}

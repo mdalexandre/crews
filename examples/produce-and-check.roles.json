@@ -1,0 +1,30 @@
+{
+  "task": "add rate limiting to the public search endpoint",
+  "roles": [
+    {
+      "name": "search-endpoint-rate-limiter",
+      "kind": "produce",
+      "mission": "add a token bucket rate limiter to the public search endpoint",
+      "deliverable": "rate-limiter-record.md",
+      "scope": ["src/api/search.py", "src/api/rate_limit.py"],
+      "acceptance": [
+        "unauthenticated callers are limited to 30 requests per minute per IP",
+        "a limited caller gets HTTP 429 with a Retry-After header"
+      ],
+      "authority": ["src/api/search.py as the current handler"],
+      "answers": {"need": "everyday_implementation", "difficulty": 1, "divisible": 0.2, "specific": 0.9}
+    },
+    {
+      "name": "rate-limiter-behavior-checker",
+      "kind": "check",
+      "mission": "verify the search endpoint rate limiter behaves per the criteria",
+      "deliverable": "rate-limiter-verdict.md",
+      "criteria": [
+        "unauthenticated callers are limited to 30 requests per minute per IP",
+        "a limited caller gets HTTP 429 with a Retry-After header"
+      ],
+      "inputs": ["src/api/search.py", "src/api/rate_limit.py"],
+      "answers": {"need": "mechanical_verification", "difficulty": 0, "divisible": 0, "specific": 0.9}
+    }
+  ]
+}

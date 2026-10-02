@@ -545,26 +545,36 @@ def test_server_injection_safe(tmp_path: Path) -> None:
     assert sorted(n for n, t in sources.items() if "import subprocess" in t) == []
 
 
+def _ps_rows() -> list[tuple[int, int, str]]:
+    """Every process as (pid, ppid, command) from POSIX ps, which behaves the same on Linux and macOS."""
+    argv = ["ps", "-ww", "-A", "-o", "pid=,ppid=,command="]  # -ww: never truncate the command to the terminal width
+    out = subprocess.run(argv, capture_output=True, text=True, check=True).stdout
+    rows: list[tuple[int, int, str]] = []
+    for line in out.splitlines():
+        parts = line.split(None, 2)
+        if len(parts) == 3 and parts[0].isdigit() and parts[1].isdigit():
+            rows.append((int(parts[0]), int(parts[1]), parts[2]))
+    return rows
+
+
 def _server_pid() -> int:
-    for stat in Path("/proc").glob("[0-9]*/stat"):
-        try:
-            fields = stat.read_text().rsplit(")", 1)[1].split()
-            cmd = (stat.parent / "cmdline").read_bytes()
-        except OSError:
-            continue
-        if int(fields[1]) == os.getpid() and str(SERVER).encode() in cmd:
-            return int(stat.parent.name)
+    for pid, ppid, command in _ps_rows():
+        if ppid == os.getpid() and str(SERVER) in command:
+            return pid
     raise AssertionError("server process not found")
 
 
-@pytest.mark.skipif(not Path("/proc/self/stat").exists(), reason="needs Linux /proc")
+def _server_rss_kb(pid: int) -> int:
+    out = subprocess.run(["ps", "-o", "rss=", "-p", str(pid)], capture_output=True, text=True, check=True).stdout
+    return int(out.split()[0])
+
+
 def test_server_is_cheap(tmp_path: Path) -> None:
     args = {"roles": roles("caption_listings"), "answers": answers("caption_listings"), "run_dir": str(tmp_path),
             "allow": 8, "force": EIGHT}
 
     async def probe(s: ClientSession) -> tuple[int, float, dict[str, Any]]:
-        status = (Path("/proc") / str(_server_pid()) / "status").read_text()
-        rss_kb = int(next(line for line in status.splitlines() if line.startswith("VmRSS:")).split()[1])
+        rss_kb = _server_rss_kb(_server_pid())
         t0 = time.perf_counter()
         env = await call(s, "crew_plan", args)
         return rss_kb, time.perf_counter() - t0, env

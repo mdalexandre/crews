@@ -1,0 +1,17 @@
+{
+  "task": "rename the config loader function across the settings module",
+  "roles": [
+    {
+      "name": "config-loader-renamer",
+      "kind": "produce",
+      "mission": "rename the config loader function across the settings module and update its callers",
+      "deliverable": "rename-record.md",
+      "scope": ["src/settings"],
+      "acceptance": [
+        "no reference to the old function name remains under src/settings",
+        "the settings module tests still pass"
+      ],
+      "answers": {"need": "repeatable_task", "difficulty": 0, "divisible": 0.1, "specific": 0.9}
+    }
+  ]
+}

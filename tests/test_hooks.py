@@ -185,9 +185,9 @@ def test_hooks_json_args_form() -> None:
     for groups in hooks.values():
         for group in groups:
             for h in group["hooks"]:
-                assert h["command"] == "python3" and h["args"][0].startswith("${CLAUDE_PLUGIN_ROOT}/hooks/")
-                assert (ROOT / h["args"][0].replace("${CLAUDE_PLUGIN_ROOT}/", "")).is_file()
-                seen.add(Path(h["args"][0]).stem)
+                assert h["command"] == "sh" and h["args"][0] == "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh"
+                assert (HOOKS / h["args"][1]).is_file()
+                seen.add(Path(h["args"][1]).stem)
     assert seen == {"seat_guard", "session_start", "inline_budget", "qa_leak_check"}
     assert {g["matcher"] for g in hooks["PreToolUse"]} == {"Agent|Task", "Bash"}
 
@@ -199,3 +199,70 @@ def test_hooks_compile_on_python39(tmp_path: Path, script: str) -> None:
                           str(HOOKS / script)], capture_output=True, text=True, timeout=600, check=False,
                          env={**os.environ, "PYTHONPYCACHEPREFIX": str(tmp_path)})
     assert res.returncode == 0, res.stderr
+
+
+# launcher (hooks/run.sh): python3, uv only, neither
+
+LAUNCHER = HOOKS / "run.sh"
+
+
+def _tool_dir(tmp_path: Path, *, python: bool, uv: bool) -> Path:
+    """A PATH directory holding sh helpers plus, optionally, a python3 link and a uv shim."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    for name in ("dirname", "cat", "sh"):
+        found = shutil.which(name)
+        assert found
+        (bin_dir / name).symlink_to(found)
+    if python:
+        (bin_dir / "python3").symlink_to(sys.executable)
+    if uv:
+        shim = bin_dir / "uv"
+        shim.write_text(f'#!/bin/sh\n# fake uv: drop "run --no-project --quiet python", forward to the interpreter\n'
+                        f'echo "$@" > "{tmp_path}/uv_args"\nshift 4\nexec "{sys.executable}" "$@"\n')
+        shim.chmod(0o755)
+    return bin_dir
+
+
+def launch(path_dir: Path, data: Path, script: str, stdin: str) -> subprocess.CompletedProcess[str]:
+    env = {k: v for k, v in os.environ.items() if k not in SCRUB}
+    env.update({"CLAUDE_PLUGIN_DATA": str(data), "CREWS_HOME": str(data), "PATH": str(path_dir)})
+    return subprocess.run(["/bin/sh", str(LAUNCHER), script], input=stdin, capture_output=True, text=True,
+                          env=env, timeout=60, check=False)
+
+
+def test_hooks_json_uses_launcher_for_every_hook() -> None:
+    cfg = json.loads((HOOKS / "hooks.json").read_text())
+    seen = 0
+    for groups in cfg["hooks"].values():
+        for group in groups:
+            for hook in group["hooks"]:
+                seen += 1
+                assert hook["command"] == "sh"
+                assert hook["args"][0] == "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh"
+                assert hook["args"][1] in SCRIPTS
+    assert seen == 6
+
+
+def test_launcher_with_python3_keeps_stdin_and_exit_code(tmp_path: Path) -> None:
+    res = launch(_tool_dir(tmp_path, python=True, uv=False), tmp_path, "seat_guard.py",
+                 json.dumps(agent("general-purpose")))
+    assert res.returncode == 2
+    assert "CREWS_SEAT_GUARD=0" in res.stderr
+    ok = launch(tmp_path / "bin", tmp_path, "seat_guard.py", json.dumps(agent("Explore")))
+    assert ok.returncode == 0
+
+
+def test_launcher_with_only_uv(tmp_path: Path) -> None:
+    res = launch(_tool_dir(tmp_path, python=False, uv=True), tmp_path, "seat_guard.py",
+                 json.dumps(agent("general-purpose")))
+    assert res.returncode == 2
+    assert "CREWS_SEAT_GUARD=0" in res.stderr
+    assert (tmp_path / "uv_args").read_text().startswith("run --no-project --quiet python ")
+
+
+def test_launcher_fails_open_with_neither(tmp_path: Path) -> None:
+    res = launch(_tool_dir(tmp_path, python=False, uv=False), tmp_path, "seat_guard.py",
+                 json.dumps(agent("general-purpose")))
+    assert res.returncode == 0
+    assert res.stdout == "" and res.stderr == ""

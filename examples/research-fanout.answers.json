@@ -1,0 +1,6 @@
+{
+  "need": {"choice": "bounded_retrieval", "confidence": 0.9, "probabilities": {"bounded_retrieval": 0.9, "repeatable_task": 0.1}},
+  "difficulty": {"score": 1.0},
+  "divisible": {"noul": 0.9},
+  "needs_verifier": {"noul": 0.2}
+}
