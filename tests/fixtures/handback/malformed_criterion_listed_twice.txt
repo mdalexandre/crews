@@ -1,0 +1,5 @@
+VERDICT: FAIL
+PASS: A1,A2
+FAIL A1: control did not endpoint clamp | EVIDENCE: crews/kernel.py:88
+UNVERIFIED: NONE
+DECISION: NONE

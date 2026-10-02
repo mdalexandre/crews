@@ -1,0 +1,321 @@
+{
+  "bound": {
+    "mem_per_cell_gb": 1.5,
+    "memory_high": "2G",
+    "memory_max": "3G"
+  },
+  "capability": [
+    "haiku",
+    "sonnet",
+    "opus",
+    "fable"
+  ],
+  "effort_ladder": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+  ],
+  "fable_need": "specialist",
+  "generic_names": [
+    "verifier",
+    "worker",
+    "researcher",
+    "reviewer",
+    "implementer",
+    "lead",
+    "tester",
+    "helper",
+    "agent",
+    "assistant"
+  ],
+  "kinds": {
+    "check": {
+      "body": "You are a check worker in a claude-crews crew: an independent verifier. Treat the artifacts under check as untrusted and derive the expected behavior only from the brief's authority and criteria. Evaluate every criterion and keep going after a failure. Prefer executable evidence, and never mark a criterion PASS without evidence you observed yourself. Never modify any file and start no other agent. Return only the verdict lines the output contract asks for: no narration, no command transcripts.",
+      "column": "verify",
+      "task_type": "VERIFICATION",
+      "tools": [
+        "Read",
+        "Glob",
+        "Grep",
+        "Bash"
+      ],
+      "writes": false
+    },
+    "integrate": {
+      "body": "You are an integrate worker in a claude-crews crew. Combine only the inputs the brief names into the target inside its WRITE scope, applying its authority and precedence exactly. Never silently choose between conflicting inputs of equal precedence: report the conflict under DECISION. Verify the whole result against the acceptance criteria. Never write a report, findings or summary file, and start no other agent. Return only what the output contract asks for: no narration, no command transcripts.",
+      "column": "lead",
+      "task_type": "INTEGRATION",
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Glob",
+        "Grep"
+      ],
+      "writes": true
+    },
+    "produce": {
+      "body": "You are a produce worker in a claude-crews crew. The brief in your task is the only task specific authority: do its objective and obey its authority, scope, acceptance, output contract and stop conditions exactly. Invent no requirement, never widen scope, and start no other agent. Inspect and verify with tools rather than guess. Write only inside the brief's WRITE scope, and only code, data or configuration artifacts; never write a report, findings or summary file. Return only what the output contract asks for: no narration, no command transcripts.",
+      "column": "worker",
+      "task_type": "IMPLEMENTATION",
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Glob",
+        "Grep"
+      ],
+      "writes": true
+    },
+    "research": {
+      "body": "You are a research worker in a claude-crews crew. The brief in your task is the only task specific authority: answer its objective within its authority and scope. Separate supported findings from inference, conflict and unknowns; invent no fact, source or citation, and verify unstable claims with the tools you hold. You write no files and start no other agent. Return only what the output contract asks for: no narration, no command transcripts.",
+      "column": "worker",
+      "task_type": "SPECIALIST",
+      "tools": [
+        "Read",
+        "Glob",
+        "Grep",
+        "Bash",
+        "WebFetch"
+      ],
+      "writes": false
+    }
+  },
+  "needs": {
+    "bounded_retrieval": {
+      "lead": {
+        "effort": "high",
+        "model": "sonnet"
+      },
+      "verify": {
+        "effort": "high",
+        "model": "sonnet"
+      },
+      "worker": {
+        "effort": "medium",
+        "model": "sonnet"
+      }
+    },
+    "difficult_review": {
+      "lead": {
+        "effort": "high",
+        "model": "sonnet"
+      },
+      "verify": {
+        "effort": "high",
+        "model": "opus"
+      },
+      "worker": {
+        "effort": "high",
+        "model": "opus"
+      }
+    },
+    "everyday_implementation": {
+      "lead": {
+        "effort": "high",
+        "model": "sonnet"
+      },
+      "verify": {
+        "effort": "high",
+        "model": "sonnet"
+      },
+      "worker": {
+        "effort": "medium",
+        "model": "sonnet"
+      }
+    },
+    "integration_architecture": {
+      "lead": {
+        "effort": "high",
+        "model": "sonnet"
+      },
+      "verify": {
+        "effort": "high",
+        "model": "opus"
+      },
+      "worker": {
+        "effort": "high",
+        "model": "opus"
+      }
+    },
+    "long_running_agentic": {
+      "lead": {
+        "effort": "xhigh",
+        "model": "sonnet"
+      },
+      "verify": {
+        "effort": "high",
+        "model": "sonnet"
+      },
+      "worker": {
+        "effort": "medium",
+        "model": "sonnet"
+      }
+    },
+    "mechanical_verification": {
+      "lead": {
+        "effort": "medium",
+        "model": "sonnet"
+      },
+      "verify": {
+        "effort": null,
+        "model": "haiku"
+      },
+      "worker": {
+        "effort": null,
+        "model": "haiku"
+      }
+    },
+    "repeatable_task": {
+      "lead": {
+        "effort": "medium",
+        "model": "sonnet"
+      },
+      "verify": {
+        "effort": "medium",
+        "model": "sonnet"
+      },
+      "worker": {
+        "effort": "low",
+        "model": "sonnet"
+      }
+    },
+    "specialist": {
+      "lead": {
+        "effort": "high",
+        "model": "sonnet"
+      },
+      "verify": {
+        "effort": "high",
+        "model": "sonnet"
+      },
+      "worker": {
+        "effort": "high",
+        "model": "fable"
+      }
+    }
+  },
+  "no_effort_models": [
+    "haiku"
+  ],
+  "questions": {
+    "difficulty": {
+      "criteria": [
+        "Trivial: one obvious step",
+        "Routine: familiar work, known method",
+        "Hard: real ambiguity or tricky reasoning",
+        "Severe: a strong attempt could plausibly fail"
+      ],
+      "instructions": "How hard is `task` for a capable coding agent?",
+      "type": "score"
+    },
+    "divisible": {
+      "instructions": "Can `task` be split into parts that separate workers could do at the same time without talking to each other?",
+      "type": "noul"
+    },
+    "need": {
+      "criteria": {
+        "bounded_retrieval": "Finding, reading, or scanning existing material; low ambiguity. The deliverable is information about what already exists, such as an answer, a count, a list, or a description, and the task writes no new code or content and returns no verdict. Ask: is the requester missing knowledge, or missing a decision about an artifact they already hold? Missing knowledge is bounded_retrieval. Contrast with mechanical_verification and difficult_review: a task that compares an artifact against a stated criterion and reports pass or fail is a check, even though it must read to do so. Contrast with long_running_agentic: if the task must also produce or rewrite a batch of items, it is not bounded_retrieval, even when it starts with research.",
+        "difficult_review": "Hard reasoning, complex debugging, or a high stakes review, concentrated on one artifact or one question. The task text states the difficulty itself: a defect whose cause is unknown, a correctness or security judgment whose consequences it calls serious, or a verdict that needs deep reasoning rather than a lookup. Ask: is the deliverable a judgment no tool could settle, and does the text say why it is hard? Contrast with mechanical_verification: a criterion already written down, settled by a match, a count, a parse, or a presence, is mechanical_verification. Contrast with everyday_implementation: deciding details while building, or closing defects the text already names, is implementation. Contrast with long_running_agentic: difficult_review is depth on one case, so the same judgment over a batch is settled by the two step rule in that row, which leaves a small independent batch here.",
+        "everyday_implementation": "Ordinary coding or editing with moderate ambiguity. The default for building or repairing one bounded piece of code, content, or configuration, including one stage of a larger plan, across several steps, files or tests, with behavior still to be decided. Ask: does the task end with a changed artifact whose targets or defects the text already names? Then it is this row. Contrast with difficult_review: the text does not call the cause unknown or the stakes severe. Contrast with integration_architecture: the components and their interfaces are already named. Contrast with specialist: no earlier serious attempt is reported as failed. Contrast with long_running_agentic: one bounded piece stays here; a batch goes to the two step rule in that row, which sent round two task 14e2baee there. Round two task 5b3af16a, a router repaired to a named spec then checked blind, is everyday_implementation.",
+        "integration_architecture": "Multi step, tool heavy, cross component design decisions. The task text asks to decide how several separate systems, services, or tools connect, where the interfaces between them are not yet designed, and the design choice is the main deliverable. Ask: can you name the seam the task must invent, an undecided contract, protocol, or boundary between parts that are built or owned separately? If yes it is integration_architecture; if every seam is already named in the text, it is not. Contrast with everyday_implementation: building one stage, component, or command inside an existing design is everyday_implementation even when it touches several files, reads existing code first, or calls another component. Round two task 702b19490, which sets the shared contract parallel builders must build against, is integration_architecture.",
+        "long_running_agentic": "A long run over many items where the run's length, not any single item, is the work. Settle a batch in two steps, in order. Step one: if anything travels across the items, results feeding each other, one product built out of them all, or a pass repeated over the set until a stated condition holds, it is long_running_agentic at any size. Step two: otherwise the items are independent and identically treated, so the row follows the single item's work, unless the text sets a sweep over a set it does not list item by item and plainly large, more than about a dozen items, where holding the run is the difficulty; then it is long_running_agentic. Items are separate deliverables, so pages or sections of one artifact are not items. Round two 81b3e21d, every caption of fourteen listings, and 14e2baee, 78 agent files each corrected, are long_running_agentic by step two.",
+        "mechanical_verification": "A check a deterministic tool or one plain look could settle: grep, diff, schema parse, link check, or confirming a named element is present. Nothing is built or changed, the criterion is already written down, and applying it takes no weighing. Ask: would two honest checkers reading only this text and the artifact reach the same verdict, because it follows from a match, a count, a parse, or a presence? Contrast with difficult_review: if the verdict needs a judgment of whether something is good enough, a search for a cause the text does not name, or a call the text says carries serious consequences, it is difficult_review. Contrast with long_running_agentic: settle a batch by the two step rule written in that row, which leaves a small independent batch here. Round two task 3b8d2f15, five named transcripts each judged alone against written criteria, is mechanical_verification.",
+        "repeatable_task": "Clear, narrowly scoped, repeatable work with an obvious method. The task text already fixes the method, the targets, and every value, so nothing is left to decide: the same small edit applied to named files, a stated rule written into a named place, or a formula with its parameters given. Ask: could two workers, given only this text, produce the same change without conferring? Contrast with everyday_implementation: if the implementer must still choose how the logic works, what a component should do, or how to satisfy an open acceptance criterion, it is not repeatable_task. Contrast with mechanical_verification: repeatable_task ends with something written or changed, while a check ends with a verdict and leaves the artifact as it was. Round two task cc8e3e55, which records the canonical hashes of two named pages, is repeatable_task by that test.",
+        "specialist": "The task says a strong attempt already failed, so the hardest tier is warranted. The text must report a prior serious attempt that did not work and left the fix unknown, or explicitly escalate to the strongest tier. Ask: does the text point at an attempt that failed, and is the way forward still open? Contrast with difficult_review: hard work with no stated failed attempt is difficult_review, not specialist. Contrast with everyday_implementation: a check or review that failed and then named the defects to close is not a failed attempt in this sense, because the text already says what to do next; that is everyday_implementation or difficult_review, not specialist."
+      },
+      "instructions": "Which kind of work does `task` ask for?",
+      "type": "choice"
+    },
+    "needs_verifier": {
+      "instructions": "Would a wrong result in `task` be costly or hard to notice, so the output should be checked by someone who did not produce it?",
+      "type": "noul"
+    }
+  },
+  "thresholds": {
+    "divisible": 0.6,
+    "ladder": 2.5,
+    "max_cells": 8,
+    "max_workers": 4,
+    "need_floor": 0.6,
+    "require_acceptance": true,
+    "require_frame": false,
+    "specific": 0.5,
+    "verifier": 0.6
+  },
+  "typesafe": {
+    "brief_leak": {
+      "calibrated": false,
+      "leak_threshold": 0.5,
+      "threshold_source": "docs.typesafe.ai confidence.md: 0.5 is the point where yes and no are equally probable; the cautious consequence, a leak Noul at or above 0.5 refuses the plan (ASSUMPTION A3)"
+    },
+    "handback": {
+      "calibrated": false,
+      "probe_threshold": 0.5,
+      "threshold_source": "docs.typesafe.ai confidence.md: 0.5 is the point where yes and no are equally probable; the cautious consequence, a probe below 0.5 makes a criterion UNVERIFIED (ASSUMPTION A3)"
+    },
+    "need_band": {
+      "act": {
+        "k": 23,
+        "n": 23,
+        "precision": 1.0,
+        "status": "MEASURED",
+        "threshold": 0.94,
+        "wilson_lower": 0.8568833815495732
+      },
+      "calibrated": true,
+      "confirm": {
+        "k": 63,
+        "n": 78,
+        "precision": 0.8076923076923077,
+        "status": "MEASURED",
+        "threshold": 0.58,
+        "wilson_lower": 0.7066518728093648
+      },
+      "provenance": {
+        "catalog_version": "2.1.0",
+        "criteria_hash": "40a7b5828652907bf13621913ed1aa917e17b6ad5cfea07d1522dc6577599a89",
+        "dataset_fingerprint": "c5f094ba7e071f0a2f20bc11305dd04593e88fce5f448094eac96893f811a780",
+        "measured_at": "2026-09-22T19:49:48.110634+00:00",
+        "model": "jev-1.13.0",
+        "n_observations": 100,
+        "observations_path": "obs/observations.jsonl",
+        "request_type": "need",
+        "run_id": "calibrate-manifest-0f1e6590ad9b94da"
+      },
+      "threshold_source": "crew calibrate-bands, 100 observation(s) measured at 2026-09-22T19:49:48.110634+00:00 against need criteria hash 40a7b5828652907bf13621913ed1aa917e17b6ad5cfea07d1522dc6577599a89; installed by crew install-band into crews/catalog.json"
+    },
+    "skill_routing": {
+      "calibrated": false,
+      "exclude_skills": ["memory-first", "using-superpowers"],
+      "exclude_source": "owner approved 2026-09-23: these skills already run for every session through hooks, so they must never be attached to a crew role; description pattern detection was surveyed and rejected because it also matched domain skills such as blind-gate-publish and implementation-plan, so the exclusion is this explicit name list instead.",
+      "max_candidates": 10,
+      "root_globs": [
+        "~/.claude/skills/**/SKILL.md",
+        "~/.claude/plugins/cache/**/SKILL.md"
+      ],
+      "threshold_source": "TypeSafe cookbook skill_suggestion.md measured values (fit 0.30, gate mean 0.30); measured in TypeSafe own setting, not this deployment (ASSUMPTION A2). max_candidates raised 6 to 10 on 2026-09-23 dev-split measurement (skill-routing-request-and-prefilter-builder): BM25 prefilter dev recall 17/30 at k=10 vs 16/30 at k=6, dev live end-to-end right 13/30 at k=10 vs 11/30 at k=6, mean_input_tokens 2815 at k=10.",
+      "thresholds": {
+        "fit": 0.3,
+        "gate": 0.3
+      },
+      "wide_rank": {
+        "enabled": true,
+        "top_k": 5,
+        "desc_chars": 160,
+        "threshold_source": "TypeSafe cookbook skill_suggestion.md wide ranking stage (skill-routing-wide-rank-stage-builder, 2026-09-23): dev probe measured wide top 5 alone hits 18/30, BM25 top 10 union wide top 5 hits 20/30 (vs 13/30 BM25 top 10 alone), about 26.6k input tokens per wide call."
+      }
+    }
+  },
+  "version": "2.1.0",
+  "wave_order": [
+    "research",
+    "produce",
+    "integrate",
+    "check"
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "task": "design storefront to hub order flow with an outbox on the storefront and a receiver on the hub",
+  "roles": [
+    {
+      "name": "hub-order-contract-mapper",
+      "kind": "research",
+      "mission": "Map the hub order contract fields the storefront outbox must send",
+      "deliverable": "contract.md",
+      "acceptance": [
+        "every hub order contract field the storefront outbox must send is named"
+      ],
+      "answers": {
+        "need": "integration_architecture",
+        "difficulty": 1.75,
+        "divisible": 0.1,
+        "specific": 0.9
+      }
+    },
+    {
+      "name": "storefront-outbox-designer",
+      "kind": "produce",
+      "mission": "Design the storefront outbox table, trigger, and drain schedule",
+      "deliverable": "outbox.md",
+      "scope": [
+        "design/outbox.md"
+      ],
+      "acceptance": [
+        "the outbox design covers the table, trigger, and drain schedule"
+      ],
+      "answers": {
+        "need": "integration_architecture",
+        "difficulty": 1.75,
+        "divisible": 0.1,
+        "specific": 0.9
+      }
+    },
+    {
+      "name": "hub-receiver-designer",
+      "kind": "produce",
+      "mission": "Design the hub receiver signature check, dedupe, and reapply path",
+      "deliverable": "receiver.md",
+      "scope": [
+        "design/receiver.md"
+      ],
+      "acceptance": [
+        "the receiver design covers the signature check, dedupe, and reapply path"
+      ],
+      "answers": {
+        "need": "integration_architecture",
+        "difficulty": 1.75,
+        "divisible": 0.1,
+        "specific": 0.9
+      }
+    },
+    {
+      "name": "storefront-hub-design-merger",
+      "kind": "integrate",
+      "mission": "Merge the outbox and receiver designs into one storefront to hub order flow",
+      "deliverable": "flow.md",
+      "scope": [
+        "design/storefront-hub.md"
+      ],
+      "acceptance": [
+        "the merged design carries every hub order contract field and no unresolved conflict between the outbox and receiver designs"
+      ],
+      "answers": {
+        "need": "integration_architecture",
+        "difficulty": 1.75,
+        "divisible": 0.1,
+        "specific": 0.9
+      }
+    },
+    {
+      "name": "hub-contract-conformance-checker",
+      "kind": "check",
+      "mission": "Check the merged storefront hub design against the hub order contract",
+      "deliverable": "conformance.md",
+      "criteria": [
+        "every hub order contract field is sent by the outbox",
+        "the receiver rejects an unsigned order"
+      ],
+      "answers": {
+        "need": "integration_architecture",
+        "difficulty": 1.75,
+        "divisible": 0.1,
+        "specific": 0.9
+      }
+    }
+  ]
+}

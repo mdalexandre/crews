@@ -1,0 +1,32 @@
+[project]
+name = "crews"
+version = "0.1.0"
+description = "Deterministic Claude crew configurations with TypeSafe judgments"
+requires-python = ">=3.12"
+dependencies = ["mcp==1.27.0"]
+
+[dependency-groups]
+dev = ["ruff", "mypy", "pytest"]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 120
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["crews", "crew.py", "server.py", "tests"]
+exclude = ["^\\.venv/", "/\\.venv/"]
+
+[[tool.mypy.overrides]]
+module = ["mcp", "mcp.*", "anyio", "agentkit_force"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers"
+testpaths = ["tests"]

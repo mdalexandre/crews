@@ -1,0 +1,66 @@
+{
+  "task": "caption 40 listings with one true caption per photo",
+  "roles": [
+    {
+      "name": "listing-caption-writer",
+      "kind": "produce",
+      "mission": "Write one true caption per photo for the listings in your batch",
+      "deliverable": "captions.md",
+      "scope": [
+        "captions/"
+      ],
+      "acceptance": [
+        "every photo in the batch has exactly one caption",
+        "no caption claims something its photo does not show"
+      ],
+      "answers": {
+        "need": "long_running_agentic",
+        "difficulty": 1.64,
+        "divisible": 0.93,
+        "specific": 0.9
+      },
+      "slices": [
+        {
+          "brief": "listings 1 to 10",
+          "scope": [
+            "captions/batch-1.json"
+          ]
+        },
+        {
+          "brief": "listings 11 to 20",
+          "scope": [
+            "captions/batch-2.json"
+          ]
+        },
+        {
+          "brief": "listings 21 to 30",
+          "scope": [
+            "captions/batch-3.json"
+          ]
+        },
+        {
+          "brief": "listings 31 to 40",
+          "scope": [
+            "captions/batch-4.json"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "caption-truth-checker",
+      "kind": "check",
+      "mission": "Check each caption against its photo and flag any caption the photo does not show",
+      "deliverable": "caption_check.md",
+      "criteria": [
+        "every photo in the 40 listings has exactly one caption",
+        "no caption claims something its photo does not show"
+      ],
+      "answers": {
+        "need": "long_running_agentic",
+        "difficulty": 1.64,
+        "divisible": 0.1,
+        "specific": 0.9
+      }
+    }
+  ]
+}

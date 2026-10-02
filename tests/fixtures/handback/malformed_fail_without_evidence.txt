@@ -1,0 +1,5 @@
+VERDICT: FAIL
+PASS: A1
+FAIL A2: control did not endpoint clamp
+UNVERIFIED: NONE
+DECISION: NONE

@@ -1,0 +1,24 @@
+{
+  "task": "rename a button label: the checkout button should say Place order instead of Submit",
+  "roles": [
+    {
+      "name": "checkout-button-label-renamer",
+      "kind": "produce",
+      "mission": "Rename the checkout button label from Submit to Place order",
+      "deliverable": "rename.md",
+      "scope": [
+        "src/components/CheckoutButton.tsx"
+      ],
+      "acceptance": [
+        "the checkout button label reads Place order",
+        "no other button label changed"
+      ],
+      "answers": {
+        "need": "repeatable_task",
+        "difficulty": 0.3,
+        "divisible": 0.1,
+        "specific": 0.9
+      }
+    }
+  ]
+}

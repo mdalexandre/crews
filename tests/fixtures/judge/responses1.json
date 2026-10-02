@@ -1,0 +1,166 @@
+{
+  "source": "synthetic TypeSafe request 1 responses in the shape the prototype reads (answers.<id>); not recorded from the live API",
+  "responses": [
+    {
+      "model": "jev-1.13.0",
+      "usage": {
+        "input_tokens": 612
+      },
+      "answers": {
+        "need": {
+          "choice": "repeatable_task",
+          "confidence": 0.74,
+          "probabilities": {
+            "repeatable_task": 0.74
+          }
+        },
+        "divisible": {
+          "noul": 0.25
+        },
+        "needs_verifier": {
+          "noul": 0.45
+        },
+        "difficulty": {
+          "score": 0.31,
+          "legend": "Routine",
+          "probabilities": [
+            0.1,
+            0.6,
+            0.2,
+            0.1
+          ],
+          "confidence": 0.5
+        }
+      }
+    },
+    {
+      "model": "jev-1.13.0",
+      "usage": {
+        "input_tokens": 612
+      },
+      "answers": {
+        "need": {
+          "choice": "bounded_retrieval",
+          "confidence": 0.52,
+          "probabilities": {
+            "bounded_retrieval": 0.52,
+            "difficult_review": 0.31
+          }
+        },
+        "divisible": {
+          "noul": 0.81
+        },
+        "needs_verifier": {
+          "noul": 0.7
+        },
+        "difficulty": {
+          "score": 1.0,
+          "legend": "Routine",
+          "probabilities": [
+            0.1,
+            0.6,
+            0.2,
+            0.1
+          ],
+          "confidence": 0.5
+        }
+      }
+    },
+    {
+      "model": "jev-1.13.0",
+      "usage": {
+        "input_tokens": 612
+      },
+      "answers": {
+        "need": {
+          "choice": "everyday_implementation",
+          "confidence": 0.91,
+          "probabilities": {
+            "everyday_implementation": 0.91
+          }
+        },
+        "divisible": {
+          "noul": 0.53
+        },
+        "needs_verifier": {
+          "noul": 0.83
+        },
+        "difficulty": {
+          "score": 1.16,
+          "legend": "Routine",
+          "probabilities": [
+            0.1,
+            0.6,
+            0.2,
+            0.1
+          ],
+          "confidence": 0.5
+        }
+      }
+    },
+    {
+      "model": "jev-1.13.0",
+      "usage": {
+        "input_tokens": 612
+      },
+      "answers": {
+        "need": {
+          "choice": "difficult_review",
+          "confidence": 0.98,
+          "probabilities": {
+            "difficult_review": 0.98
+          }
+        },
+        "divisible": {
+          "noul": 0.68
+        },
+        "needs_verifier": {
+          "noul": 0.94
+        },
+        "difficulty": {
+          "score": 1.71,
+          "legend": "Routine",
+          "probabilities": [
+            0.1,
+            0.6,
+            0.2,
+            0.1
+          ],
+          "confidence": 0.5
+        }
+      }
+    },
+    {
+      "model": "jev-1.13.0",
+      "usage": {
+        "input_tokens": 612
+      },
+      "answers": {
+        "need": {
+          "choice": "long_running_agentic",
+          "confidence": 0.68,
+          "probabilities": {
+            "long_running_agentic": 0.68
+          }
+        },
+        "divisible": {
+          "noul": 0.93
+        },
+        "needs_verifier": {
+          "noul": 0.69
+        },
+        "difficulty": {
+          "score": 2.6,
+          "legend": "Routine",
+          "probabilities": [
+            0.1,
+            0.6,
+            0.2,
+            0.1
+          ],
+          "confidence": 0.5
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "task": "find where MRR is computed across billing, analytics, and reports",
+  "roles": [
+    {
+      "name": "mrr-formula-locator",
+      "kind": "research",
+      "mission": "Locate every place MRR is computed and quote the formula with file and line",
+      "deliverable": "mrr_sites.md",
+      "acceptance": [
+        "every MRR computation site in billing, analytics, and reports is quoted with file and line"
+      ],
+      "answers": {
+        "need": "bounded_retrieval",
+        "difficulty": 1.0,
+        "divisible": 0.8,
+        "specific": 0.9
+      },
+      "slices": [
+        {
+          "brief": "search billing for MRR"
+        },
+        {
+          "brief": "search analytics for MRR"
+        },
+        {
+          "brief": "search reports for MRR"
+        }
+      ]
+    },
+    {
+      "name": "mrr-trace-checker",
+      "kind": "check",
+      "mission": "Confirm each reported MRR site in billing, analytics, and reports computes MRR at the quoted line",
+      "deliverable": "mrr_check.md",
+      "criteria": [
+        "every reported MRR site exists at the quoted file and line",
+        "no MRR computation in billing, analytics, or reports is missing"
+      ],
+      "answers": {
+        "need": "bounded_retrieval",
+        "difficulty": 1.0,
+        "divisible": 0.1,
+        "specific": 0.9
+      }
+    }
+  ]
+}

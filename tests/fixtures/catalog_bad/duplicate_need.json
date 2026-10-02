@@ -1,0 +1,256 @@
+{
+  "version": "1.0.0",
+  "effort_ladder": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+  ],
+  "capability": [
+    "haiku",
+    "sonnet",
+    "opus",
+    "fable"
+  ],
+  "no_effort_models": [
+    "haiku"
+  ],
+  "fable_need": "specialist",
+  "thresholds": {
+    "need_floor": 0.6,
+    "divisible": 0.6,
+    "verifier": 0.6,
+    "ladder": 2.5,
+    "max_workers": 4,
+    "max_cells": 8,
+    "specific": 0.5
+  },
+  "bound": {
+    "mem_per_cell_gb": 1.5,
+    "memory_high": "2G",
+    "memory_max": "3G"
+  },
+  "needs": {
+    "repeatable_task": {"worker": {"model": "sonnet", "effort": "low"}, "lead": {"model": "opus", "effort": "medium"}, "verify": {"model": "sonnet", "effort": "medium"}},
+    "repeatable_task": {
+      "worker": {
+        "model": "sonnet",
+        "effort": "low"
+      },
+      "lead": {
+        "model": "opus",
+        "effort": "medium"
+      },
+      "verify": {
+        "model": "sonnet",
+        "effort": "medium"
+      }
+    },
+    "bounded_retrieval": {
+      "worker": {
+        "model": "sonnet",
+        "effort": "medium"
+      },
+      "lead": {
+        "model": "opus",
+        "effort": "high"
+      },
+      "verify": {
+        "model": "sonnet",
+        "effort": "high"
+      }
+    },
+    "mechanical_verification": {
+      "worker": {
+        "model": "haiku",
+        "effort": null
+      },
+      "lead": {
+        "model": "sonnet",
+        "effort": "medium"
+      },
+      "verify": {
+        "model": "haiku",
+        "effort": null
+      }
+    },
+    "everyday_implementation": {
+      "worker": {
+        "model": "sonnet",
+        "effort": "medium"
+      },
+      "lead": {
+        "model": "opus",
+        "effort": "high"
+      },
+      "verify": {
+        "model": "opus",
+        "effort": "high"
+      }
+    },
+    "difficult_review": {
+      "worker": {
+        "model": "opus",
+        "effort": "high"
+      },
+      "lead": {
+        "model": "opus",
+        "effort": "high"
+      },
+      "verify": {
+        "model": "opus",
+        "effort": "high"
+      }
+    },
+    "integration_architecture": {
+      "worker": {
+        "model": "opus",
+        "effort": "high"
+      },
+      "lead": {
+        "model": "opus",
+        "effort": "high"
+      },
+      "verify": {
+        "model": "opus",
+        "effort": "high"
+      }
+    },
+    "long_running_agentic": {
+      "worker": {
+        "model": "sonnet",
+        "effort": "medium"
+      },
+      "lead": {
+        "model": "opus",
+        "effort": "xhigh"
+      },
+      "verify": {
+        "model": "opus",
+        "effort": "high"
+      }
+    },
+    "specialist": {
+      "worker": {
+        "model": "fable",
+        "effort": "high"
+      },
+      "lead": {
+        "model": "opus",
+        "effort": "high"
+      },
+      "verify": {
+        "model": "opus",
+        "effort": "high"
+      }
+    }
+  },
+  "kinds": {
+    "research": {
+      "column": "worker",
+      "task_type": "SPECIALIST",
+      "writes": false,
+      "tools": [
+        "Read",
+        "Glob",
+        "Grep",
+        "Bash",
+        "WebFetch"
+      ],
+      "body": "You gather grounded findings for the role named in your brief. Report paths and line numbers, never raw dumps. Write your deliverable to the path the brief names."
+    },
+    "produce": {
+      "column": "worker",
+      "task_type": "IMPLEMENTATION",
+      "writes": true,
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Glob",
+        "Grep"
+      ],
+      "body": "You build the part of the task your brief names, inside its write scope only. Report the commands you ran and their output. Write your deliverable to the path the brief names."
+    },
+    "integrate": {
+      "column": "lead",
+      "task_type": "INTEGRATION",
+      "writes": true,
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Glob",
+        "Grep"
+      ],
+      "body": "You merge the deliverables your brief names into one artifact, inside its write scope only. Consume only the listed deliverables. Write your deliverable to the path the brief names."
+    },
+    "check": {
+      "column": "verify",
+      "task_type": "VERIFICATION",
+      "writes": false,
+      "tools": [
+        "Read",
+        "Glob",
+        "Grep",
+        "Bash"
+      ],
+      "body": "You check the artifacts your brief names against its criteria. You did not produce them and you never see a producer's conclusion. Report PASS or FAIL per criterion with evidence, and write your report to the path the brief names."
+    }
+  },
+  "wave_order": [
+    "research",
+    "produce",
+    "integrate",
+    "check"
+  ],
+  "generic_names": [
+    "verifier",
+    "worker",
+    "researcher",
+    "reviewer",
+    "implementer",
+    "lead",
+    "tester",
+    "helper",
+    "agent",
+    "assistant"
+  ],
+  "questions": {
+    "need": {
+      "type": "choice",
+      "instructions": "Which kind of work does `task` ask for?",
+      "criteria": {
+        "repeatable_task": "Clear, narrowly scoped, repeatable work with an obvious method",
+        "bounded_retrieval": "Finding, reading, or scanning existing material; low ambiguity",
+        "mechanical_verification": "A check a deterministic tool could make alone: grep, diff, schema parse, link check",
+        "everyday_implementation": "Ordinary coding or editing with moderate ambiguity",
+        "difficult_review": "Hard reasoning, complex debugging, or a high stakes review",
+        "integration_architecture": "Multi step, tool heavy, cross component design decisions",
+        "long_running_agentic": "A long run repeating work over many items",
+        "specialist": "The task says a strong attempt already failed, so the hardest tier is warranted"
+      }
+    },
+    "divisible": {
+      "type": "noul",
+      "instructions": "Can `task` be split into parts that separate workers could do at the same time without talking to each other?"
+    },
+    "needs_verifier": {
+      "type": "noul",
+      "instructions": "Would a wrong result in `task` be costly or hard to notice, so the output should be checked by someone who did not produce it?"
+    },
+    "difficulty": {
+      "type": "score",
+      "instructions": "How hard is `task` for a capable coding agent?",
+      "criteria": [
+        "Trivial: one obvious step",
+        "Routine: familiar work, known method",
+        "Hard: real ambiguity or tricky reasoning",
+        "Severe: a strong attempt could plausibly fail"
+      ]
+    }
+  }
+}

@@ -1,0 +1,5 @@
+STATUS: COMPLETE
+ARTIFACTS: crews/handback.py, tests/test_handback.py
+RESULT: Implemented C-HB hand back probe judging per SRD section 2.5.
+VERIFY: A1 met by uv run mypy crews/handback.py (exit 0). A2 met by uv run pytest tests/test_handback.py (all passed).
+DECISION: NONE

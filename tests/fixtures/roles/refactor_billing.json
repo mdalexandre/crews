@@ -1,0 +1,40 @@
+{
+  "task": "refactor the billing adapter to separate Stripe calls from invoice mapping",
+  "roles": [
+    {
+      "name": "billing-adapter-refactorer",
+      "kind": "produce",
+      "mission": "Separate the Stripe calls from the invoice mapping in the billing adapter",
+      "deliverable": "refactor.md",
+      "scope": [
+        "src/billing/adapter.py"
+      ],
+      "acceptance": [
+        "the billing adapter no longer calls Stripe from the invoice mapping code path",
+        "the billing adapter tests pass"
+      ],
+      "answers": {
+        "need": "everyday_implementation",
+        "difficulty": 1.16,
+        "divisible": 0.1,
+        "specific": 0.9
+      }
+    },
+    {
+      "name": "billing-parity-checker",
+      "kind": "check",
+      "mission": "Check the refactored billing adapter produces the same invoices as before",
+      "deliverable": "parity.md",
+      "criteria": [
+        "the billing adapter tests pass",
+        "invoice output for the fixture customers is byte identical to the pre refactor output"
+      ],
+      "answers": {
+        "need": "everyday_implementation",
+        "difficulty": 1.16,
+        "divisible": 0.1,
+        "specific": 0.9
+      }
+    }
+  ]
+}

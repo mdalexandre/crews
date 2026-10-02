@@ -1,0 +1,86 @@
+{
+  "task": "security review of an edge function that issues order refunds with the service role key",
+  "roles": [
+    {
+      "name": "edge-fn-auth-path-tracer",
+      "kind": "research",
+      "mission": "Trace every auth path into the refund edge function and list which ones reach the service role key",
+      "deliverable": "auth_paths.md",
+      "acceptance": [
+        "every auth path into the refund edge function is traced to the service role key or ruled out"
+      ],
+      "answers": {
+        "need": "bounded_retrieval",
+        "difficulty": 1.0,
+        "divisible": 0.1,
+        "specific": 0.9
+      }
+    },
+    {
+      "name": "rls-policy-auditor",
+      "kind": "produce",
+      "mission": "Audit the RLS policies on the refund and order tables and write fixes",
+      "deliverable": "rls_audit.md",
+      "scope": [
+        "supabase/policies/"
+      ],
+      "acceptance": [
+        "the refund and order table RLS policies reject an unauthorized request"
+      ],
+      "answers": {
+        "need": "difficult_review",
+        "difficulty": 1.71,
+        "divisible": 0.8,
+        "specific": 0.9
+      },
+      "slices": [
+        {
+          "brief": "refund table policies",
+          "scope": [
+            "supabase/policies/refunds.sql"
+          ]
+        },
+        {
+          "brief": "order table policies",
+          "scope": [
+            "supabase/policies/orders.sql"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "service-key-leak-hunter",
+      "kind": "produce",
+      "mission": "Find where the service role key can leak from the refund function and patch it",
+      "deliverable": "key_leaks.md",
+      "scope": [
+        "supabase/functions/refund/"
+      ],
+      "acceptance": [
+        "the service role key no longer leaks from the refund function's logs or responses"
+      ],
+      "answers": {
+        "need": "difficult_review",
+        "difficulty": 1.2,
+        "divisible": 0.1,
+        "specific": 0.9
+      }
+    },
+    {
+      "name": "exploit-repro-checker",
+      "kind": "check",
+      "mission": "Reproduce each refund exploit path against the patched function",
+      "deliverable": "exploit_check.md",
+      "criteria": [
+        "no auth path reaches the service role key without an owner check",
+        "each reported refund exploit fails after the patch"
+      ],
+      "answers": {
+        "need": "difficult_review",
+        "difficulty": 1.71,
+        "divisible": 0.1,
+        "specific": 0.9
+      }
+    }
+  ]
+}

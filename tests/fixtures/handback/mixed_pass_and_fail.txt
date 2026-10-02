@@ -1,0 +1,5 @@
+VERDICT: FAIL
+PASS: A1
+FAIL A2: sales tax rounding drifts at the cent boundary | EVIDENCE: calcworld/harness/tests/calc/sales-tax-and-discount.test.js:41
+UNVERIFIED: NONE
+DECISION: NONE
