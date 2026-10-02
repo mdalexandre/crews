@@ -11,12 +11,12 @@ RUN apt-get update \
 RUN npm install -g @anthropic-ai/claude-code@2.1.287 && npm cache clean --force
 
 # A non-root user with an empty home, like a fresh account.
-RUN useradd --create-home --shell /bin/bash tester
+RUN useradd --create-home --home-dir /opt/tester --shell /bin/bash tester
 USER tester
-ENV HOME=/home/tester
-ENV PATH=/home/tester/.local/bin:${PATH}
+ENV HOME=/opt/tester
+ENV PATH=/opt/tester/.local/bin:${PATH}
 
 # Pinned uv from the official installer (installs to ~/.local/bin, no shell profile edits).
 RUN curl -LsSf https://astral.sh/uv/0.11.6/install.sh | env UV_NO_MODIFY_PATH=1 sh
 
-WORKDIR /home/tester
+WORKDIR /opt/tester
