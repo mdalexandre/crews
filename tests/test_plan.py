@@ -13,6 +13,8 @@ from typing import Any
 
 import pytest
 
+from crews import planner
+
 ROOT = Path(__file__).resolve().parent.parent
 CREW = ROOT / "crew.py"
 FIX = ROOT / "tests" / "fixtures"
@@ -237,8 +239,10 @@ def test_plan_surfaces(tmp_path: Path) -> None:
                 assert piece in call["prompt"]
             assert "Deliverable: write your result to" not in call["prompt"]
             argv = c["headless_argv"]
-            assert argv[:9] == ["systemd-run", "--user", "--scope", "-p", "MemoryHigh=2G", "-p", "MemoryMax=3G",
-                                "--collect", "--"]
+            prefix = planner.memory_scope(CAT)
+            assert prefix in ([], ["systemd-run", "--user", "--scope", "-p", "MemoryHigh=2G", "-p", "MemoryMax=3G",
+                                   "--collect", "--"])
+            assert argv[:len(prefix)] == prefix and argv[len(prefix)] == "claude"
             assert argv[argv.index("--model") + 1] == c["model"]
             assert ("--effort" in argv) == (c["effort"] is not None)
             assert role["name"] in json.loads(argv[argv.index("--agents") + 1])
@@ -248,6 +252,26 @@ def test_plan_surfaces(tmp_path: Path) -> None:
                     assert flag in help_text, flag
     view = json.loads(result.stdout)
     assert all("headless_argv" not in c for c in calls(view))
+
+
+@pytest.mark.parametrize(("platform", "which"), [("darwin", "/usr/bin/systemd-run"), ("linux", None),
+                                                 ("win32", None)])
+def test_headless_argv_has_no_systemd_off_linux(monkeypatch: pytest.MonkeyPatch, platform: str,
+                                                which: str | None) -> None:
+    """OSS-POR-5: the memory scope prefix is emitted only on Linux with systemd-run on PATH."""
+    monkeypatch.setattr(planner.sys, "platform", platform)
+    monkeypatch.setattr(planner.shutil, "which", lambda _name: which)
+    assert planner.memory_scope(CAT) == []
+    argv = planner._headless(CAT, "role-x", "sonnet", "medium", ["Read"], "body", "prompt")
+    assert argv[0] == "claude" and "systemd-run" not in argv
+
+
+def test_headless_argv_scopes_memory_on_linux_with_systemd(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(planner.sys, "platform", "linux")
+    monkeypatch.setattr(planner.shutil, "which", lambda _name: "/usr/bin/systemd-run")
+    b = CAT["bound"]
+    assert planner.memory_scope(CAT) == ["systemd-run", "--user", "--scope", "-p", f"MemoryHigh={b['memory_high']}",
+                                         "-p", f"MemoryMax={b['memory_max']}", "--collect", "--"]
 
 
 def test_plan_haiku_cell_has_no_effort(tmp_path: Path) -> None:

@@ -23,6 +23,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
+import sys
 from pathlib import PurePosixPath
 from typing import Any
 
@@ -413,12 +415,21 @@ def _prompt(role: dict[str, Any], task: str, kind: str, write_scope: list[str], 
     return "\n".join([header, *sections, "</crew_task>"])
 
 
+def memory_scope(cat: dict[str, Any]) -> list[str]:
+    """Argv prefix that bounds a headless worker's memory: a systemd user scope with the catalog's
+    MemoryHigh and MemoryMax, only on Linux where systemd-run is on PATH. Elsewhere an empty prefix, so
+    the emitted argv is a plain `claude -p ...` that runs on any platform (OSS-POR-5)."""
+    if not sys.platform.startswith("linux") or shutil.which("systemd-run") is None:
+        return []
+    b = cat["bound"]
+    return ["systemd-run", "--user", "--scope", "-p", f"MemoryHigh={b['memory_high']}", "-p",
+            f"MemoryMax={b['memory_max']}", "--collect", "--"]
+
+
 def _headless(cat: dict[str, Any], name: str, model: str, effort: str | None, tools: list[str], body: str,
               prompt: str) -> list[str]:
-    b = cat["bound"]
     agent = {name: {"description": f"claude-crews role {name}", "prompt": body, "tools": tools, "model": model}}
-    argv = ["systemd-run", "--user", "--scope", "-p", f"MemoryHigh={b['memory_high']}", "-p",
-            f"MemoryMax={b['memory_max']}", "--collect", "--", "claude", "-p", "--model", model]
+    argv = [*memory_scope(cat), "claude", "-p", "--model", model]
     if effort is not None:
         argv += ["--effort", effort]
     argv += ["--agents", json.dumps(agent, sort_keys=True), "--agent", name, prompt]
