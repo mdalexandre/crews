@@ -13,7 +13,7 @@ Interface
 Boundaries
     The server plans; the session dispatches. It issues no Agent call, starts no claude process and no shell.
     A writing tool called without run_dir writes under
-    ~/.crews/runs/<execution_id>/ and nowhere else. stdout carries only the protocol.
+    <crews home>/runs/<execution_id>/ and nowhere else. stdout carries only the protocol.
     The live judge runs only when the server's own environment names TYPESAFE_API_KEY_FILE (SRD Q9 option a);
     a key value in TYPESAFE_API_KEY is dropped at start, so the registration can only ever carry the key's path.
 
@@ -59,12 +59,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from mcp.server.fastmcp import FastMCP  # noqa: E402
 
-from crews import catalog, cli, installer, judge, planner  # noqa: E402
+from crews import catalog, cli, installer, judge, paths, planner  # noqa: E402
 
 os.environ.pop("TYPESAFE_API_KEY", None)
 
 HOLON_ID = "claude-crews"
-RUNS_ROOT = "~/.crews/runs"
 Q9_OFF = ("live judge is off for this server: its registration names no TYPESAFE_API_KEY_FILE (SRD Q9); "
           "the outage budget stands")
 
@@ -89,7 +88,7 @@ def _files(root: Path | None) -> set[str]:
 
 
 def _run_dir(given: str | None, execution_id: str) -> Path:
-    return Path(given).expanduser() if given else Path(RUNS_ROOT).expanduser() / execution_id
+    return Path(given).expanduser() if given else paths.state_dir("runs") / execution_id
 
 
 def _envelope(tool: str, inputs: dict[str, Any], run: Path | None,
@@ -164,7 +163,7 @@ def crew_budget(answers: dict[str, Any] | None = None, outage: bool = False,
                 run_dir: str | None = None) -> dict[str, Any]:
     """Cell budget from four typed task answers, from the outage flag, or from the live judge when the
     registration allows it. Twin of `crew budget`. Writes <run dir>/budget.json; run_dir defaults to
-    ~/.crews/runs/<execution_id>/.
+    <crews home>/runs/<execution_id>/.
 
     answers takes the NESTED task shape, which is not the flat roles[].answers shape:
         {"need": {"choice": <need>, "confidence": 0..1, "probabilities": {<need>: 0..1}},
@@ -204,7 +203,7 @@ def crew_plan(roles: dict[str, Any] | list[Any] | str, answers: dict[str, Any] |
     carries returns ("artifact", "report", or "verdict") and record_path (the file `crew record` writes from the
     agent's hand-back; the agent never writes it itself). The headless argv stay in <run dir>/plan.json. Twin of
     `crew plan`. The server dispatches nothing: the session issues the calls. run_dir defaults to
-    ~/.crews/runs/<execution_id>/.
+    <crews home>/runs/<execution_id>/.
 
     Every check role's authored text is always scanned by the mechanical brief leak regex floor (no option,
     no network); a hit refuses the plan. `skills` and `brief_check` are each "live" (default) or "off": each

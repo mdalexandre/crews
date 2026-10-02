@@ -12,7 +12,7 @@ Interface (exact names and signatures bind the mission contract)
                           cap=DEFAULT_QUEUE_CAP, now=None) -> dict     (JEV-20/JEV-28, Policy C)
 
 No live TypeSafe request leaves this machine unless the ledger under CREWS_EGRESS_DIR (default
-~/.crews/egress) holds a single use, unconsumed owner approval for the exact call id and payload
+<crews home>/egress) holds a single use, unconsumed owner approval for the exact call id and payload
 fingerprint. `gated_call` is the only path that may reach the network (default transport is
 `judge.call(body, retries=0)`), and it consumes the approval record before invoking transport exactly
 once: no function in this module ever retries, and none reads or stores the TypeSafe key.
@@ -33,7 +33,6 @@ three ledger files under a shared read (no lock is required: it never mutates th
 
 from __future__ import annotations
 
-import fcntl
 import hashlib
 import json
 import os
@@ -43,7 +42,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
-from crews import judge
+from crews import judge, paths
 
 _PENDING = "pending.jsonl"
 _APPROVALS = "approvals.jsonl"
@@ -53,7 +52,7 @@ _LOCK = "ledger.lock"
 
 def _dir() -> Path:
     raw = os.environ.get("CREWS_EGRESS_DIR")
-    d = Path(raw).expanduser() if raw else Path.home() / ".crews" / "egress"
+    d = Path(raw).expanduser() if raw else paths.state_dir("egress")
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -62,14 +61,27 @@ def _path(name: str) -> Path:
     return _dir() / name
 
 
+def _flock(fd: int, *, exclusive: bool) -> None:
+    """fcntl.flock where fcntl exists (Linux, macOS); on a platform without it, msvcrt byte locking."""
+    try:
+        import fcntl
+    except ImportError:
+        import msvcrt  # type: ignore[import-not-found,unused-ignore]
+
+        os.lseek(fd, 0, os.SEEK_SET)
+        msvcrt.locking(fd, msvcrt.LK_LOCK if exclusive else msvcrt.LK_UNLCK, 1)  # type: ignore[attr-defined,unused-ignore]
+        return
+    fcntl.flock(fd, fcntl.LOCK_EX if exclusive else fcntl.LOCK_UN)
+
+
 @contextmanager
 def _locked() -> Iterator[None]:
     fh = open(_path(_LOCK), "a+", encoding="utf-8")
     try:
-        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        _flock(fh.fileno(), exclusive=True)
         yield
     finally:
-        fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+        _flock(fh.fileno(), exclusive=False)
         fh.close()
 
 

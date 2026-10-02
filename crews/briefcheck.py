@@ -1,9 +1,8 @@
 """C-BL, check brief leakage (SRD typesafe-integration-v1.0.md section 2.5, component C-BL).
 
 Interface
-    LEAK                 the seven alternatives copied verbatim from
-                          the fresh session QA guard hook lines 10 to 17, joined the
-                          same way, compiled with the same flags.
+    LEAK                 the seven leak alternatives below, joined with "|" and compiled
+                          case insensitive.
     regex_hits(brief)     -> list[str]         the mechanical floor; runs first, needs no network
     request(brief)        -> dict[str, Any]    one "leak" Noul question over the brief text
     decide(hits, noul, threshold, calibrated=True) -> dict
@@ -31,9 +30,7 @@ INCLUDES_WORKER_OUTPUT = True
 # rendered boilerplate (the output contract or the check protocol lines planner.py always appends).
 _LIST_FIELDS = ("criteria", "authority", "inputs", "execution", "read_scope", "must_not", "blocked_when")
 
-# Copied character for character from fresh_session_qa_guard.py lines 10 to 17 (the hook's LEAK regex).
-# Do not import the hook module at runtime; a parity test in tests/test_briefcheck.py checks this copy
-# against the hook file's own source.
+# The leak regex: self-contained in this package, with no import of or reference to any file outside it.
 LEAK_ALTERNATIVES: list[str] = [
     r"\bconfirm (?:that |this |it )?(?:is|are|was|looks?) (?:correct|right|done|fixed|passing|good|fine)\b",
     r"\b(?:i|we) (?:already )?(?:verified|confirmed|checked|tested|validated) (?:that|this|it)\b",

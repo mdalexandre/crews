@@ -1,6 +1,6 @@
 """C-BL, check brief leakage (SRD typesafe-integration-v1.0.md section 2.5, TSI-BL-01, TSI-BL-02).
 
-One test per behavior: parity with the hook's LEAK regex, no false positive on the current fixture check
+One test per behavior: no false positive on the current fixture check
 briefs, an injected leak is a hit, and decide's three outcomes (LEAK on any hit, CLEAN below threshold
 with no hits, UNVERIFIED when the Noul is None and there are no hits).
 """

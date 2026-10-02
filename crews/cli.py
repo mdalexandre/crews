@@ -20,6 +20,7 @@ from crews import (
     installer,
     judge,
     need_gate,
+    paths,
     planner,
     record,
 )
@@ -53,7 +54,7 @@ def _emit(payload: Any) -> None:
 
 def _audit_dir() -> Path:
     raw = os.environ.get("CREWS_AUDIT_DIR")
-    d = Path(raw).expanduser() if raw else Path.home() / ".crews" / "audit"
+    d = Path(raw).expanduser() if raw else paths.state_dir("audit")
     d.mkdir(parents=True, exist_ok=True)
     return d
 

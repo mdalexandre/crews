@@ -548,6 +548,7 @@ def _server_pid() -> int:
     raise AssertionError("server process not found")
 
 
+@pytest.mark.skipif(not Path("/proc/self/stat").exists(), reason="needs Linux /proc")
 def test_server_is_cheap(tmp_path: Path) -> None:
     args = {"roles": roles("caption_listings"), "answers": answers("caption_listings"), "run_dir": str(tmp_path),
             "allow": 8, "force": EIGHT}

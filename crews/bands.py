@@ -36,7 +36,7 @@ Interface
         fingerprint a band's provenance records is a hash of the observations content, never the
         path they happen to live at).
 
-Data directory: env CREWS_CALIBRATION_DIR, else ~/.crews/calibration, holding
+Data directory: env CREWS_CALIBRATION_DIR, else <crews home>/calibration, holding
 observations.jsonl and bands.json. calibration_dir() resolves it; callers (the CLI wiring, out
 of this module's scope) pass the resulting paths into the functions above.
 """
@@ -50,16 +50,18 @@ import os
 from pathlib import Path
 from typing import Any
 
-DEFAULT_CALIBRATION_DIRNAME = ".crews/calibration"
+from crews import paths
+
+DEFAULT_CALIBRATION_DIRNAME = "calibration"
 Z_95 = 1.959963984540054
 
 
 def calibration_dir() -> Path:
-    """CREWS_CALIBRATION_DIR if set, else ~/.crews/calibration. Resolution only, no I/O."""
+    """CREWS_CALIBRATION_DIR if set, else <crews home>/calibration. Resolution only, no I/O."""
     env = os.environ.get("CREWS_CALIBRATION_DIR")
     if env:
         return Path(env)
-    return Path.home() / DEFAULT_CALIBRATION_DIRNAME
+    return paths.state_dir(DEFAULT_CALIBRATION_DIRNAME)
 
 
 def dataset_fingerprint(path: str | Path) -> str:
