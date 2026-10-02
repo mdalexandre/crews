@@ -209,6 +209,15 @@ def _key() -> str:
     raise JudgeUnavailable("no key: set TYPESAFE_API_KEY_FILE to the key file's path")
 
 
+def key_configured() -> bool:
+    """True when a TypeSafe key is configured and readable (the value is never exposed)."""
+    try:
+        _key()
+    except JudgeUnavailable:
+        return False
+    return True
+
+
 def _scrub(value: Any, key: str) -> Any:
     """Replace the key wherever an endpoint echoed it, so no answer, note, or meta field can carry it onward."""
     if isinstance(value, str):

@@ -21,6 +21,7 @@ from crews import (
     judge,
     need_gate,
     paths,
+    planindex,
     planner,
     record,
 )
@@ -319,11 +320,57 @@ def _judge_notes(info: dict[str, Any] | None, notes: list[str], owner_gates: lis
         notes.append(f"need_gate {ng['decision']}: {ng['reason']}")
 
 
+NO_KEY_NOTE = ("judge live was asked for but no TypeSafe key is configured (set TYPESAFE_API_KEY_FILE to the "
+               "key file's path); using the declared answers")
+SKIPPED_NOTE = "judge skipped because answers were declared; using the declared answers"
+
+
+def degrade_judge(judge_mode: str, answers: Any, outage: bool) -> tuple[str, str | None]:
+    """OSS-FIX-4: judge live with declared answers is never a refusal. The declared answers stand and the
+    judge is not asked, with a note naming why: no key configured, or the judge skipped for declared answers.
+    Returns (judge mode to use, note or None). The outage flag keeps its own conflict check."""
+    if judge_mode == "live" and answers is not None and not outage:
+        return "off", (SKIPPED_NOTE if judge.key_configured() else NO_KEY_NOTE)
+    return judge_mode, None
+
+
+def schema_errors(cat: dict[str, Any], spec: Any, answers: Any, outage: bool, judge_mode: str) -> list[str]:
+    """OSS-FIX-2: every input defect of a plan call in one list, each naming its field and the expected
+    shape: the declared task answers, the roles spec, and the brief leak regex floor. Nothing here touches
+    the environment or the network; a live judge call is not made until this list is empty."""
+    errors: list[str] = []
+    check_required: bool | None = None
+    if judge_mode != "live" and not outage:
+        if answers is None:
+            errors.append("answers: give declared task answers (object {need, divisible, needs_verifier, "
+                          "difficulty}), the outage flag, or judge live")
+        else:
+            defects = budget.check_answers(cat, answers)
+            errors += [f"answers: {d}" for d in defects]
+            if not defects:
+                check_required = bool(budget.compute(cat, answers)["check_required"])
+    elif judge_mode == "live" and answers is not None and not outage:
+        defects = budget.check_answers(cat, answers)
+        errors += [f"answers: {d}" for d in defects]
+        if not defects:
+            check_required = bool(budget.compute(cat, answers)["check_required"])
+    errors += planner.spec_errors(cat, spec, check_required)
+    if not errors:
+        try:
+            _check_brief_leak_floor(spec, spec.get("task") if isinstance(spec, dict) else None)
+        except planner.PlanRefused as exc:
+            errors += exc.errors
+    return errors
+
+
 def core_budget(cat: dict[str, Any], *, answers: Any, outage: bool, judge_mode: str, task: str | None,
                 run_dir: str | None) -> dict[str, Any]:
     """The budget, shared by the budget verb and the crew_budget tool. Raises PlanRefused on refused input."""
+    judge_mode, skip_note = degrade_judge(judge_mode, answers, outage)
     ans, info = resolve_task_answers(cat, judge_mode, answers, outage, task)
     result = budget.compute(cat, ans)
+    if skip_note:
+        result["notes"].insert(0, skip_note)
     owner_gates: list[dict[str, Any]] = []
     _judge_notes(info, result["notes"], owner_gates)
     if info is not None:
@@ -378,7 +425,13 @@ def run_plan(cat: dict[str, Any], answers: Any, spec: Any, run_dir: str, allow: 
         plan["notes"] = notes + plan["notes"]
     for name, payload in files.items():
         write_run_file(run_dir, name, payload)
-    return planner.public_view(plan)
+    view = planner.public_view(plan)
+    try:
+        planindex.record(view, str(Path(run_dir).expanduser()))
+    except OSError as exc:
+        view["notes"] = list(view.get("notes") or []) + [
+            f"plan index not written ({type(exc).__name__}); the seat guard cannot admit this plan from disk"]
+    return view
 
 
 def _check_brief_leak_floor(spec: Any, task: str | None) -> None:
@@ -566,9 +619,12 @@ def core_plan(cat: dict[str, Any], *, spec: Any, answers: Any, outage: bool, jud
     skills_mode and brief_check_mode are each "off" (default) or "live"; off leaves the plan byte identical
     to the plan without this mission's wiring (TSI-SKL-05, TSI-BL-04)."""
     task = spec.get("task") if isinstance(spec, dict) else None
-    _check_brief_leak_floor(spec, task)
+    errors = schema_errors(cat, spec, answers, outage, judge_mode)
+    if errors:
+        raise planner.PlanRefused(errors)
+    judge_mode, skip_note = degrade_judge(judge_mode, answers, outage)
     task_answers, info = resolve_task_answers(cat, judge_mode, answers, outage, task)
-    notes: list[str] = []
+    notes: list[str] = [skip_note] if skip_note else []
     owner_gates: list[dict[str, Any]] = []
     _judge_notes(info, notes, owner_gates)
     # Phase 9 step 8 / token accounting: request 1's answering model and usage (judge.meta, carried
@@ -673,7 +729,44 @@ def core_plan(cat: dict[str, Any], *, spec: Any, answers: Any, outage: bool, jud
         view["owner_gates"] = owner_gates
     if typesafe_info:
         view["typesafe"] = typesafe_info
+    if owner_gates or typesafe_info:
+        _extend_plan_file(run_dir, {k: view[k] for k in ("owner_gates", "typesafe") if k in view})
     return view
+
+
+_CALL_KEEP = ("cell_id", "role", "kind", "model", "effort", "seat_file", "seat_installed", "record_path", "returns")
+
+
+def _extend_plan_file(run_dir: str, extra: dict[str, Any]) -> None:
+    """OSS-FIX-3: the bulky owner gate packets and TypeSafe detail live in <run dir>/plan.json beside the
+    plan, so a compact inline result can point at them."""
+    target = Path(run_dir).expanduser() / "plan.json"
+    plan = json.loads(target.read_text(encoding="utf-8"))
+    plan.update(extra)
+    write_run_file(run_dir, "plan.json", plan)
+
+
+def compact_view(view: dict[str, Any]) -> dict[str, Any]:
+    """OSS-FIX-3: the compact inline plan result. It keeps the calls to dispatch (subagent_type, description,
+    prompt, record_path) and the summary fields. Owner gate packets (their skill option lists) and the TypeSafe
+    detail stay in plan.json, referenced by `full_in`; verbose restores the full result."""
+    out = {k: v for k, v in view.items() if k not in ("waves", "owner_gates", "typesafe")}
+    out["waves"] = [{"kind": w["kind"], "calls": [
+        {**{k: c[k] for k in _CALL_KEEP if k in c},
+         "agent_call": {k: c["agent_call"][k] for k in ("subagent_type", "description", "prompt")}}
+        for c in w["calls"]]} for w in view["waves"]]
+    if view.get("owner_gates"):
+        out["owner_gates"] = [{**{k: g[k] for k in ("call_id", "fingerprint", "purpose", "approve_command") if k in g},
+                               "questions": {qid: {"type": q.get("type"), "option_count": len(q.get("options") or [])}
+                                             for qid, q in (g.get("questions") or {}).items()}}
+                              for g in view["owner_gates"]]
+    if view.get("typesafe"):
+        out["typesafe"] = {name: ({k: v for k, v in info.items() if k != "owner_gates"}
+                                  if isinstance(info, dict) else info)
+                           for name, info in view["typesafe"].items()}
+    out["compact"] = True
+    out["full_in"] = view["headless_argv_in"]
+    return out
 
 
 def cmd_plan(ns: argparse.Namespace) -> int:

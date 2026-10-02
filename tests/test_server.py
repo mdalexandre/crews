@@ -59,8 +59,12 @@ Probe = Callable[[ClientSession], Awaitable[Any]]
 def serve(probe: Probe, env: dict[str, str] | None = None, errlog: Path | None = None) -> Any:
     """Start server.py over stdio, complete the handshake, run the probe, and return what it returns."""
     async def main() -> Any:
+        given = env or {}
+        # keep the server's state out of the real ~/.crews unless the test points HOME or CREWS_HOME itself
+        isolate = {"CREWS_HOME": os.environ["CREWS_HOME"]} if "CREWS_HOME" in os.environ and not (
+            {"HOME", "CREWS_HOME"} & set(given)) else {}
         params = StdioServerParameters(command=sys.executable, args=[str(SERVER)],
-                                       env={**get_default_environment(), **(env or {})})
+                                       env={**get_default_environment(), **isolate, **given})
         with open(errlog or os.devnull, "w", encoding="utf-8") as err:
             async with stdio_client(params, errlog=err) as (r, w):
                 async with ClientSession(r, w) as s:
@@ -145,7 +149,8 @@ def test_server_parity_with_the_cli(tmp_path: Path, agents: Path) -> None:
                          "--run-dir", str(run))
         assert code == 0
         batch += [("crew_budget", {"answers": answers(name), "run_dir": str(tmp_path / f"b-{name}")}),
-                  ("crew_plan", {"roles": roles(name), "answers": answers(name), "run_dir": str(run)})]
+                  ("crew_plan", {"roles": roles(name), "answers": answers(name), "run_dir": str(run),
+                                 "verbose": True})]  # the CLI prints the full view; compact is the default
         twins += [cli("budget", "--answers", str(ans))[1], plan]
     envelopes = calls(batch)
     assert len(envelopes) == len(twins)
@@ -223,8 +228,12 @@ def test_server_writes_stay_in_the_run_dir(tmp_path: Path, agents: Path) -> None
     defaults = [Path(e["evidence"][0]["run_dir"]) for e in envelopes[2:]]
     assert all(d.parent == home / ".crews" / "runs" and d.name == e["execution_id"]
                for d, e in zip(defaults, envelopes[2:]))
-    strays = [p for p in home.rglob("*") if p.is_file() and not any(p.is_relative_to(d) for d in defaults)]
+    # the plan index (OSS-FIX-1) is the one other thing a plan writes, under <crews home>/plans/
+    index_dir = home / ".crews" / "plans"
+    strays = [p for p in home.rglob("*") if p.is_file() and not any(p.is_relative_to(d) for d in defaults)
+              and not p.is_relative_to(index_dir)]
     assert strays == []
+    assert (index_dir / "index.jsonl").is_file()
     assert {p.name for p in run.iterdir()} >= {"budget.json", "plan.json", "seats.json"}
 
 

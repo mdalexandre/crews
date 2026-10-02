@@ -56,7 +56,13 @@ CHECK_PROTOCOL_LINES = [
 
 
 class PlanRefused(ValueError):
-    """The spec cannot be planned. The message names the role or the missing kind."""
+    """The spec cannot be planned. The message names the role or the missing kind. Given a list, every
+    error is kept in `errors` (OSS-FIX-2) and the message joins them; one string behaves as it always did."""
+
+    def __init__(self, message: str | list[str]) -> None:
+        errors = [message] if isinstance(message, str) else list(message)
+        super().__init__(errors[0] if len(errors) == 1 else f"{len(errors)} errors: " + "; ".join(errors))
+        self.errors: list[str] = errors
 
 
 def _words(text: str) -> set[str]:
@@ -85,24 +91,33 @@ def _returns_of(role: dict[str, Any]) -> str | None:
     return declared if declared else RETURNS_DEFAULT[kind]
 
 
-def _role_answers(role: dict[str, Any], cat: dict[str, Any]) -> dict[str, Any]:
+def _got(value: Any) -> str:
+    return type(value).__name__
+
+
+def _role_answer_errors(role: dict[str, Any], cat: dict[str, Any]) -> list[str]:
+    """Every defect in a role's flat answers object (the shape belongs in roles[].answers)."""
     ans = role.get("answers")
     name = role.get("name")
     if not isinstance(ans, dict):
-        raise PlanRefused(f"role {name}: answers are missing (need, difficulty, divisible)")
+        return [f"role {name}: answers are missing; roles[].answers must be an object "
+                f"{{need: one of {', '.join(cat['needs'])}, difficulty: 0..3, divisible: 0..1, specific: 0..1}}, "
+                f"got {_got(ans)}"]
+    errors: list[str] = []
     if ans.get("need") not in cat["needs"]:
-        raise PlanRefused(f"role {name}: unknown need {ans.get('need')!r}")
+        errors.append(f"role {name}: unknown need {ans.get('need')!r}")
     for key, hi in (("difficulty", 3), ("divisible", 1)):
         v = ans.get(key)
         if not isinstance(v, (int, float)) or not 0 <= v <= hi:
-            raise PlanRefused(f"role {name}: answers.{key} must be a number from 0 to {hi}")
+            errors.append(f"role {name}: answers.{key} must be a number from 0 to {hi}")
     spec = ans.get("specific")
     if spec is not None and (not isinstance(spec, (int, float)) or not 0 <= spec <= 1):
-        raise PlanRefused(f"role {name}: answers.specific must be a number from 0 to 1")
-    floor = cat["thresholds"]["specific"]
-    if spec is not None and spec < floor:
-        raise PlanRefused(f"role {name}: specificity {spec} below {floor}; name a concrete target in this task")
-    return ans
+        errors.append(f"role {name}: answers.specific must be a number from 0 to 1")
+    else:
+        floor = cat["thresholds"]["specific"]
+        if spec is not None and spec < floor:
+            errors.append(f"role {name}: specificity {spec} below {floor}; name a concrete target in this task")
+    return errors
 
 
 def _frame_text(frame: dict[str, Any]) -> list[str]:
@@ -140,108 +155,149 @@ def _check_frame(role: dict[str, Any], cat: dict[str, Any]) -> None:
                               "remove the years of experience phrase")
 
 
-def _check_v2_fields(role: dict[str, Any], cat: dict[str, Any]) -> None:
-    """V2-1: authority, inputs, acceptance, execution, returns, finding_format, blocked_when, must_not, read_scope."""
+def _v2_field_errors(role: dict[str, Any], cat: dict[str, Any]) -> list[str]:
+    """V2-1: authority, inputs, acceptance, execution, returns, finding_format, blocked_when, must_not,
+    read_scope. Every defect is collected, none stops the scan."""
     name = role.get("name")
     kind = role["kind"]
+    errors: list[str] = []
     for field in LIST_FIELDS:
         if field in role and role[field] is not None:
             v = role[field]
             if not (isinstance(v, list) and all(isinstance(x, str) and x.strip() for x in v)):
-                raise PlanRefused(f"role {name}: {field} must be a list of non empty strings")
+                errors.append(f"role {name}: {field} must be a list of non empty strings, got {_got(v)}")
     for field in STRING_FIELDS:
         if field in role and role[field] is not None:
             v = role[field]
             if not (isinstance(v, str) and v.strip()):
-                raise PlanRefused(f"role {name}: {field} must be a non empty string")
+                errors.append(f"role {name}: {field} must be a non empty string, got {_got(v)}")
     returns_field = role.get("returns")
     if kind == "check":
         if returns_field is not None:
-            raise PlanRefused(f"role {name}: a check role has no returns field; it returns a verdict")
+            errors.append(f"role {name}: a check role has no returns field; it returns a verdict")
     elif returns_field is not None:
         if returns_field not in ("artifact", "report"):
-            raise PlanRefused(f"role {name}: returns must be \"artifact\" or \"report\"")
-        if kind == "research" and returns_field == "artifact":
-            raise PlanRefused(f"role {name}: a research role cannot return artifact; it holds no Write tool")
+            errors.append(f"role {name}: returns must be \"artifact\" or \"report\"")
+        elif kind == "research" and returns_field == "artifact":
+            errors.append(f"role {name}: a research role cannot return artifact; it holds no Write tool")
     if kind in ("produce", "research", "integrate") and cat["thresholds"].get("require_acceptance"):
         acc = role.get("acceptance")
         if not (isinstance(acc, list) and acc):
-            raise PlanRefused(f"role {name}: a {kind} role needs acceptance criteria "
-                              "(the observable conditions that define done)")
+            errors.append(f"role {name}: a {kind} role needs acceptance criteria "
+                          "(the observable conditions that define done)")
+    return errors
 
 
-def check_spec(cat: dict[str, Any], spec: Any, check_required: bool) -> list[dict[str, Any]]:
-    """Every refusal rule except the budget and the cap, which need the cell count."""
+def spec_errors(cat: dict[str, Any], spec: Any, check_required: bool | None) -> list[str]:
+    """Every refusal rule except the budget and the cap, which need the cell count, collected in one pass
+    (OSS-FIX-2): each error names the role and field and the shape expected. check_required None skips the
+    missing check role rule (the caller does not know the budget yet). An empty list means the spec is valid."""
     if not isinstance(spec, dict) or not isinstance(spec.get("roles"), list) or not spec["roles"]:
-        raise PlanRefused("roles: the spec must hold a non empty roles list")
+        return ["roles: the spec must hold a non empty roles list (object {task, roles: [...]})"]
+    errors: list[str] = []
     task = spec.get("task")
     if not isinstance(task, str) or not task.strip():
-        raise PlanRefused("task: the spec must hold the task text")
+        errors.append("task: the spec must hold the task text (a non empty string)")
+        task = ""
     generic = {g.lower() for g in cat["generic_names"]}
     kinds = set(cat["kinds"])
     seen: set[str] = set()
-    roles: list[dict[str, Any]] = spec["roles"]
-    for role in roles:
+    roles: list[Any] = spec["roles"]
+    valid: list[dict[str, Any]] = []
+    for idx, role in enumerate(roles):
+        if not isinstance(role, dict):
+            errors.append(f"roles[{idx}]: must be an object, got {_got(role)}")
+            continue
+        before = len(errors)
         name = role.get("name")
         if not isinstance(name, str) or not NAME_RE.match(name):
-            raise PlanRefused(f"role {name!r}: name must be kebab case, saying what it does to what")
-        tokens = set(name.split("-"))
-        if name in generic or tokens <= generic | kinds:
-            raise PlanRefused(f"role {name}: generic name; name it after what it does to what in this task")
-        if name in seen:
-            raise PlanRefused(f"role {name}: duplicate name")
-        seen.add(name)
+            errors.append(f"role {name!r}: name must be kebab case, saying what it does to what")
+        else:
+            tokens = set(name.split("-"))
+            if name in generic or tokens <= generic | kinds:
+                errors.append(f"role {name}: generic name; name it after what it does to what in this task")
+            if name in seen:
+                errors.append(f"role {name}: duplicate name")
+            seen.add(name)
         kind = role.get("kind")
-        if kind not in kinds:
-            raise PlanRefused(f"role {name}: kind must be one of {', '.join(cat['wave_order'])}")
+        kind_ok = kind in kinds
+        if not kind_ok:
+            errors.append(f"role {name}: kind must be one of {', '.join(cat['wave_order'])}")
         mission = role.get("mission")
-        if not isinstance(mission, str) or not mission.strip():
-            raise PlanRefused(f"role {name}: mission is missing")
-        scope = role.get("scope") or []
-        if not isinstance(scope, list) or not all(isinstance(s, str) and s.strip() for s in scope):
-            raise PlanRefused(f"role {name}: scope must be a list of paths")
-        anchor = _words(task) | {w for s in scope for w in _words(s.replace("/", " ").replace("_", " "))}
-        if not _words(mission) & anchor:
-            raise PlanRefused(f"role {name}: mission shares no word of four or more letters with the task or its scope")
+        mission_ok = isinstance(mission, str) and bool(mission.strip())
+        if not mission_ok:
+            errors.append(f"role {name}: mission is missing (a non empty string)")
+        raw_scope = role.get("scope") or []
+        scope_ok = isinstance(raw_scope, list) and all(isinstance(x, str) and x.strip() for x in raw_scope)
+        if not scope_ok:
+            errors.append(f"role {name}: scope must be a list of paths (list of non empty strings), "
+                          f"got {_got(raw_scope)}")
+        scope: list[str] = raw_scope if scope_ok else []
+        if mission_ok and scope_ok:
+            anchor = _words(task) | {w for x in scope for w in _words(x.replace("/", " ").replace("_", " "))}
+            if not _words(str(mission)) & anchor:
+                errors.append(f"role {name}: mission shares no word of four or more letters with the task "
+                              "or its scope")
         if kind == "check" and scope:
-            raise PlanRefused(f"role {name}: a check role holds no write scope")
-        _check_v2_fields(role, cat)
-        writes = kind in ("produce", "integrate") and _returns_of(role) == "artifact"
-        if writes and not scope:
-            raise PlanRefused(f"role {name}: a {kind} role needs a write scope")
+            errors.append(f"role {name}: a check role holds no write scope")
+        if kind_ok:
+            errors += _v2_field_errors(role, cat)
+        returns_artifact = kind_ok and kind in ("produce", "integrate") and _returns_of(role) == "artifact"
+        if returns_artifact and not scope and scope_ok:
+            errors.append(f"role {name}: a {kind} role needs a write scope")
         if kind == "check" and not (isinstance(role.get("criteria"), list) and role["criteria"]):
-            raise PlanRefused(f"role {name}: a check role needs its acceptance criteria")
+            errors.append(f"role {name}: a check role needs its acceptance criteria (a non empty list)")
         deliverable = role.get("deliverable")
         plain = isinstance(deliverable, str) and deliverable.strip() and "/" not in deliverable
         if not plain or str(deliverable).startswith("."):
-            raise PlanRefused(f"role {name}: deliverable must be a plain file name")
+            errors.append(f"role {name}: deliverable must be a plain file name (no directory, not hidden), "
+                          f"got {deliverable!r}")
         slices = role.get("slices") or []
-        if not isinstance(slices, list):
-            raise PlanRefused(f"role {name}: slices must be a list")
-        for sl in slices:
-            if not isinstance(sl, dict) or not isinstance(sl.get("brief"), str):
-                raise PlanRefused(f"role {name}: every slice needs a brief")
-            if writes and not sl.get("scope"):
-                raise PlanRefused(f"role {name}: every slice of a {kind} role needs a scope")
-        _check_frame(role, cat)
-        _role_answers(role, cat)
-    if check_required and not any(r["kind"] == "check" for r in roles):
-        raise PlanRefused("missing kind check: the budget requires a check role; write one for this task")
+        slices_ok = isinstance(slices, list)
+        if not slices_ok:
+            errors.append(f"role {name}: slices must be a list")
+        else:
+            for sl in slices:
+                if not isinstance(sl, dict) or not isinstance(sl.get("brief"), str):
+                    errors.append(f"role {name}: every slice needs a brief")
+                elif returns_artifact and not sl.get("scope"):
+                    errors.append(f"role {name}: every slice of a {kind} role needs a scope")
+        try:
+            _check_frame(role, cat)
+        except PlanRefused as exc:
+            errors += exc.errors
+        errors += _role_answer_errors(role, cat)
+        if len(errors) == before and kind_ok and slices_ok:
+            valid.append(role)
+    if check_required and not any(isinstance(r, dict) and r.get("kind") == "check" for r in roles):
+        errors.append("missing kind check: the budget requires a check role; write one for this task")
+    if errors:
+        return errors
     claims: list[tuple[str, str]] = []
-    for role in roles:
+    for role in valid:
         if role["kind"] not in ("produce", "integrate") or _returns_of(role) != "artifact":
             continue
-        paths = [p for sl in (role.get("slices") or []) for p in sl["scope"]] or list(role["scope"])
         own = [p for sl in (role.get("slices") or []) for p in sl["scope"]]
+        paths = own or list(role["scope"])
         for i, a in enumerate(own):
             for b in own[i + 1:]:
                 if _overlap(a, b):
-                    raise PlanRefused(f"role {role['name']}: slices overlap on {a} and {b}")
+                    errors.append(f"role {role['name']}: slices overlap on {a} and {b}")
         for p in paths:
             for other, q in claims:
                 if other != role["name"] and _overlap(p, q):
-                    raise PlanRefused(f"roles {other} and {role['name']}: write scopes overlap on {q} and {p}")
+                    errors.append(f"roles {other} and {role['name']}: write scopes overlap on {q} and {p}")
             claims.append((role["name"], p))
+    return errors
+
+
+def check_spec(cat: dict[str, Any], spec: Any, check_required: bool) -> list[dict[str, Any]]:
+    """Every refusal rule except the budget and the cap, which need the cell count. Raises one PlanRefused
+    holding every defect found (OSS-FIX-2)."""
+    errors = spec_errors(cat, spec, check_required)
+    if errors:
+        raise PlanRefused(errors)
+    roles: list[dict[str, Any]] = spec["roles"]
     return roles
 
 

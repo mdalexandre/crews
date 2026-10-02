@@ -105,8 +105,10 @@ def _envelope(tool: str, inputs: dict[str, Any], run: Path | None,
         out = body(cat)
         env["output"], env["warnings"], env["errors"] = out.output, out.warnings, out.errors
         env["status"] = "BLOCKED" if out.errors else ("COMPLETED_WITH_WARNINGS" if out.warnings else "COMPLETED")
-    except (planner.PlanRefused, catalog.CatalogError, judge.JudgeParseError,
-            json.JSONDecodeError) as exc:
+    except planner.PlanRefused as exc:
+        # OSS-FIX-2: a refusal lists every error it found, one entry each
+        env["status"], env["errors"] = "BLOCKED", [f"PlanRefused: {e}" for e in exc.errors]
+    except (catalog.CatalogError, judge.JudgeParseError, json.JSONDecodeError) as exc:
         env["status"], env["errors"] = "BLOCKED", [f"{type(exc).__name__}: {exc}"]
     except Exception as exc:  # noqa: BLE001  a tool never raises, by contract (DR-20)
         env["status"], env["errors"] = "FAILED", [f"{type(exc).__name__}: {exc}"]
@@ -129,7 +131,8 @@ def _live_gate(judge_mode: str, warnings: list[str]) -> tuple[str, bool]:
     return judge_mode, False
 
 
-_NOTE_MARKERS = ("judge outage", "judge owner_gate", "need_gate", "skill routing", "brief leak")
+_NOTE_MARKERS = ("judge outage", "judge owner_gate", "judge skipped", "judge live was asked", "need_gate",
+                 "skill routing", "brief leak", "plan index not written")
 
 
 def _judge_warnings(result: dict[str, Any], warnings: list[str]) -> None:
@@ -195,7 +198,7 @@ def crew_budget(answers: dict[str, Any] | None = None, outage: bool = False,
 def crew_plan(roles: dict[str, Any] | list[Any] | str, answers: dict[str, Any] | None = None, outage: bool = False,
               judge: Literal["off", "live"] = "live", run_dir: str | None = None, allow: int | None = None,
               force: dict[str, Any] | None = None, skills: Literal["off", "live"] = "live",
-              brief_check: Literal["off", "live"] = "live") -> dict[str, Any]:
+              brief_check: Literal["off", "live"] = "live", verbose: bool = False) -> dict[str, Any]:
     """Plan task specific roles into seated cells. `roles` is {task, roles: [{name, kind, mission, deliverable,
     scope, slices, criteria, answers, professional_frame, authority, inputs, acceptance, execution, returns,
     finding_format, blocked_when, must_not, read_scope}]} (brief contract v2, SRD spec V2-1). Returns the Agent
@@ -214,7 +217,12 @@ def crew_plan(roles: dict[str, Any] | list[Any] | str, answers: dict[str, Any] |
     packet, never an error) before any of the three reaches `crews/cli.py`. This tool never approves a call
     itself; only the CLI `approve` and `approve-batch` verbs do (TSI-GATE-07). Even an approved, answered
     call at `skills` or `brief_check` never acts while the shipped catalog's matching `calibrated` flag
-    stays false (JEV-17): the TypeSafe verdict is recorded for calibration and the plan is unchanged."""
+    stays false (JEV-17): the TypeSafe verdict is recorded for calibration and the plan is unchanged.
+
+    The inline result is compact (OSS-FIX-3): the calls plus summary fields. Owner gate packets and the
+    TypeSafe detail are in <run dir>/plan.json (named by `full_in`); verbose=true returns everything inline.
+    A refusal lists every input error at once (OSS-FIX-2). With judge "live" and declared `answers`, the
+    declared answers stand and the plan carries a warning (OSS-FIX-4), never a refusal."""
     eid = uuid.uuid4().hex
     run = _run_dir(run_dir, eid)
 
@@ -236,9 +244,9 @@ def crew_plan(roles: dict[str, Any] | list[Any] | str, answers: dict[str, Any] |
                              run_dir=str(run), allow=allow, force=force, skills_mode=skills_mode,
                              brief_check_mode=brief_check_mode)
         _judge_warnings(view, warnings)
-        return Outcome(view, warnings=warnings)
+        return Outcome(view if verbose else cli.compact_view(view), warnings=warnings)
     inputs = {"roles": roles, "answers": answers, "outage": outage, "judge": judge, "run_dir": run_dir,
-              "allow": allow, "force": force, "skills": skills, "brief_check": brief_check}
+              "allow": allow, "force": force, "skills": skills, "brief_check": brief_check, "verbose": verbose}
     return _envelope("crew_plan", inputs, run, body, eid)
 
 
