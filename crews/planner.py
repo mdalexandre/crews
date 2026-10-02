@@ -29,7 +29,7 @@ from pathlib import PurePosixPath
 from typing import Any
 
 from crews import budget as budget_mod
-from crews import catalog
+from crews import catalog, paths
 
 STOPWORDS = frozenset({"with", "that", "this", "from", "into", "each", "have", "will", "what", "when", "then", "than",
                        "them", "they", "your", "only", "also", "over", "must", "make", "sure", "task", "role", "work"})
@@ -565,7 +565,8 @@ def build(cat: dict[str, Any], task_answers: dict[str, Any] | None, spec: Any, r
                     "cell_id": cell_id, "role": role["name"], "kind": kind, "model": model, "effort": effort,
                     "seat_file": seat_file, "seat_installed": installed, "deliverable": record_path,
                     "record_path": record_path, "returns": returns_val if kind != "check" else "verdict",
-                    "agent_call": {"subagent_type": seat_file, "description": desc, "prompt": prompt},
+                    "agent_call": {"subagent_type": f"{paths.seat_prefix()}{seat_file}", "description": desc,
+                                   "prompt": prompt},
                     "headless_argv": _headless(cat, role["name"], model, effort, spec_kind["tools"],
                                                spec_kind["body"], prompt),
                 })

@@ -29,3 +29,9 @@ def resolve_state_path(path: str | Path) -> Path:
     an absolute path is returned unchanged."""
     p = Path(path).expanduser()
     return p if p.is_absolute() else crews_home() / p
+
+
+def seat_prefix() -> str:
+    """CREWS_SEAT_PREFIX (OSS-PKG-5): the namespace a host puts before a plugin agent name, for example
+    'crews:' so a planned seat reads 'crews:crew-produce-sonnet-high'. Empty when unset (CLI and tests)."""
+    return os.environ.get("CREWS_SEAT_PREFIX", "").strip()

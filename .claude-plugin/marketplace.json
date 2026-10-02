@@ -1,0 +1,16 @@
+{
+  "name": "crews",
+  "owner": {
+    "name": "mdalexandre"
+  },
+  "metadata": {
+    "description": "Single plugin marketplace for crews, an independent project for Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "crews",
+      "source": ".",
+      "description": "Plan and enforce delegation to task specific Claude Code subagent seats."
+    }
+  ]
+}

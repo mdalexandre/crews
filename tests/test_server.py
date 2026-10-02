@@ -356,7 +356,7 @@ def test_server_secret_sentinel(tmp_path: Path, stub: str, monkeypatch: pytest.M
     absent = calls([("crew_budget", {**live, "run_dir": str(tmp_path / "absent")})],
                    env={**gate_env, "TYPESAFE_API_KEY_FILE": str(tmp_path / "missing"), "CREW_TYPESAFE_URL": stub})[0]
     unset = calls([("crew_budget", {**live, "run_dir": str(tmp_path / "unset")})],
-                  env={**gate_env, "TYPESAFE_API_KEY": SENTINEL, "CREW_TYPESAFE_URL": stub})[0]
+                  env={**gate_env, "TYPESAFE_API_KEY": "  ", "CREW_TYPESAFE_URL": stub})[0]
     outage = cli("budget", "--outage")[1]
     for e in (absent, unset):
         assert e["status"] == "COMPLETED_WITH_WARNINGS" and e["warnings"]

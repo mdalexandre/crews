@@ -62,7 +62,9 @@ def decide(tool_name: str, tool_input: Any, crews_home: Path, now: datetime,
         return Decision(True)
     seat = str(tool_input.get("subagent_type") or "")
     desc = str(tool_input.get("description") or "")
-    if seat.lower() in BUILTIN_GENERIC or seat.lower() in _generic_names():
+    bare = seat.rsplit(":", 1)[-1]
+    if seat.lower() in BUILTIN_GENERIC or bare.lower() in BUILTIN_GENERIC or \
+            seat.lower() in _generic_names() or bare.lower() in _generic_names():
         name = seat or "an Agent call with no subagent_type (general-purpose)"
         return _block(f"crews-seat-guard: {name} is a generic agent. Delegation goes through claude-crews: "
                       f"call crew_plan with task specific roles and dispatch exactly the Agent calls it "
@@ -70,6 +72,8 @@ def decide(tool_name: str, tool_input: Any, crews_home: Path, now: datetime,
     if not SEAT_RE.match(seat):
         return Decision(True)
     digest = planindex.prompt_sha256(str(tool_input.get("prompt") or ""))
+    # OSS-PKG-5: both forms (crew-... and <prefix>crew-...) are seats; either is admitted only when the index
+    # holds that exact subagent_type, so a bare dispatch of a prefixed plan (or the reverse) stays blocked
     if planindex.admitted(crews_home, seat, desc, digest, now):
         return Decision(True)
     if transcript_text and f'"subagent_type": "{seat}"' in transcript_text and \

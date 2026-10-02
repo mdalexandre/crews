@@ -1,0 +1,42 @@
+{
+  "name": "crews",
+  "version": "0.1.0",
+  "description": "Crews plans and enforces delegation to task specific Claude Code subagent seats. An independent project for Claude Code, not affiliated with Anthropic.",
+  "author": {
+    "name": "mdalexandre"
+  },
+  "repository": "https://github.com/mdalexandre/crews",
+  "license": "MIT",
+  "keywords": ["claude-code", "subagents", "delegation", "planning", "mcp"],
+  "userConfig": {
+    "typesafe_api_key": {
+      "type": "string",
+      "title": "TypeSafe API key",
+      "description": "Optional. Enables the live TypeSafe judge. Leave empty to run with the judge off.",
+      "sensitive": true,
+      "required": false,
+      "default": ""
+    },
+    "inline_budget_enabled": {
+      "type": "boolean",
+      "title": "Enable the inline execution budget",
+      "description": "When true, the hook denies Bash after the inline budget is spent until crew_plan allocates more execution.",
+      "required": false,
+      "default": false
+    },
+    "inline_budget": {
+      "type": "number",
+      "title": "Inline execution budget",
+      "description": "Counted execution calls allowed per turn before crew_plan is required. Used only when the inline budget is enabled.",
+      "required": false,
+      "default": 5
+    },
+    "seat_guard_mode": {
+      "type": "string",
+      "title": "Seat guard mode",
+      "description": "block denies a generic or unplanned seat dispatch; advise only warns.",
+      "required": false,
+      "default": "block"
+    }
+  }
+}

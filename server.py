@@ -14,8 +14,8 @@ Boundaries
     The server plans; the session dispatches. It issues no Agent call, starts no claude process and no shell.
     A writing tool called without run_dir writes under
     <crews home>/runs/<execution_id>/ and nowhere else. stdout carries only the protocol.
-    The live judge runs only when the server's own environment names TYPESAFE_API_KEY_FILE (SRD Q9 option a);
-    a key value in TYPESAFE_API_KEY is dropped at start, so the registration can only ever carry the key's path.
+    The live judge runs only when the server's own environment names a key: TYPESAFE_API_KEY (the plugin
+    userConfig value) or TYPESAFE_API_KEY_FILE (SRD Q9). An empty or blank TYPESAFE_API_KEY is no key.
 
 Calibration note (JEV-17, owner directive 2026-09-22, crew task calibrated-flag-wiring-completer): the
 four `judge`/`skills`/`brief_check` parameters below now default "live", completing the flip a prior role
@@ -61,11 +61,14 @@ from mcp.server.fastmcp import FastMCP  # noqa: E402
 
 from crews import catalog, cli, installer, judge, paths, planner  # noqa: E402
 
-os.environ.pop("TYPESAFE_API_KEY", None)
+# OSS-PKG-8: the plugin registration passes the userConfig key as TYPESAFE_API_KEY. An empty or blank value
+# (the key was left unset) is no key at all, so the variable is removed and the judge degrades to off.
+if not os.environ.get("TYPESAFE_API_KEY", "").strip():
+    os.environ.pop("TYPESAFE_API_KEY", None)
 
 HOLON_ID = "claude-crews"
-Q9_OFF = ("live judge is off for this server: its registration names no TYPESAFE_API_KEY_FILE (SRD Q9); "
-          "the outage budget stands")
+Q9_OFF = ("live judge is off for this server: its registration names no TYPESAFE_API_KEY or "
+          "TYPESAFE_API_KEY_FILE (SRD Q9); the outage budget stands")
 
 mcp = FastMCP("claude-crews", log_level="WARNING")
 
@@ -124,7 +127,8 @@ def _live_gate(judge_mode: str, warnings: list[str]) -> tuple[str, bool]:
     may gate several parameters (judge, skills, brief_check) through the same `warnings` list in one body;
     the Q9 warning is appended at most once per call even so, since it names the same missing key file
     regardless of which of the four surfaces asked for live."""
-    if judge_mode == "live" and not os.environ.get("TYPESAFE_API_KEY_FILE"):
+    has_key = bool(os.environ.get("TYPESAFE_API_KEY") or os.environ.get("TYPESAFE_API_KEY_FILE"))
+    if judge_mode == "live" and not has_key:
         if Q9_OFF not in warnings:
             warnings.append(Q9_OFF)
         return "off", True

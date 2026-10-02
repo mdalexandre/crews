@@ -45,7 +45,7 @@ def render(cat: dict[str, Any], seat: dict[str, Any]) -> str:
         f"name: {seat['agent']}",
         f'description: "claude-crews seat: {seat["kind"]} kind on {seat["model"]}{level}. NEVER dispatch this '
         'agent directly or as a generic reviewer, verifier, or worker: use only the exact Agent call a '
-        'mcp__claude-crews__crew_plan result returns, which carries the task specific role, mission, '
+        'crew_plan tool result returns, which carries the task specific role, mission, '
         'deliverable, and scope. A dispatch with no matching crew_plan call is blocked."',
         f"tools: {', '.join(seat['tools'])}",
         f"model: {seat['model']}",
