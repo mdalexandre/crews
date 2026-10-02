@@ -11,7 +11,7 @@ First public release.
 * Deterministic planner: task specific roles in, seated cells and Agent calls out, with the cell budget computed from four typed answers.
 * Catalog of needs, kinds, models and efforts, and 26 pre-generated seat agents.
 * MCP tools `crew_catalog`, `crew_check`, `crew_budget` and `crew_plan`.
-* Seat guard hook that blocks generic and unplanned subagent dispatches, advisory check leak hook, session start line, and an opt-in inline execution budget hook.
+* Seat guard hook that blocks generic subagents and any crew seat dispatch no plan returned (other named agents are not affected), advisory check leak hook, session start line, and an opt-in inline execution budget hook.
 * `crew` skill describing the brief contract and how to dispatch a plan.
 * Optional TypeSafe judge, skill routing and brief check, off unless a key is configured and each call approved.
 * Command line (`crew.py`) with `plan`, `budget`, `record`, `list`, `install`, `check` and `uninstall`.
