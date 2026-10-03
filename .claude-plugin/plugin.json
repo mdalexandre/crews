@@ -1,6 +1,6 @@
 {
   "name": "crews",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Crews plans and enforces delegation to task specific Claude Code subagent seats. An independent project for Claude Code, not affiliated with Anthropic.",
   "author": {
     "name": "mdalexandre"

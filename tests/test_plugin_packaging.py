@@ -52,7 +52,7 @@ def test_validate_strict_exits_zero() -> None:
 def test_manifest_contract() -> None:
     plugin, market = load(PLUGIN), load(MARKET)
     assert plugin["name"] == "crews" and not plugin["name"].startswith("claude-")
-    assert plugin["version"] == "0.1.0" and plugin["license"] == "MIT"
+    assert plugin["version"] == "0.2.0" and plugin["license"] == "MIT"
     assert "@" not in json.dumps(plugin["author"]) and plugin["author"] == {"name": "mdalexandre"}
     assert "independent project for Claude Code" in plugin["description"]
     cfg = plugin["userConfig"]

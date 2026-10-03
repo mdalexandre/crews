@@ -2,7 +2,7 @@
 
 All notable changes are recorded here. The format follows Keep a Changelog and the project uses Semantic Versioning (0.y.z: the public interface may still change).
 
-## [Unreleased] 0.2.0
+## [0.2.0] 2026-10-03
 
 ### Added
 
@@ -27,4 +27,5 @@ First public release.
 * Hook launcher `hooks/run.sh`: every hook starts through `sh`, using `python3` (3.9 or newer) when present, else `uv`, else it exits 0 (fail open). The hooks need python3 3.9+ or uv on the machine.
 * Uninstall instructions remove the orphaned plugin cache (`rm -rf ~/.claude/plugins/cache/crews`), because Claude Code keeps the seat files there after `claude plugin uninstall`.
 
+[0.2.0]: https://github.com/mdalexandre/crews/releases/tag/v0.2.0
 [0.1.0]: https://github.com/mdalexandre/crews/releases/tag/v0.1.0
