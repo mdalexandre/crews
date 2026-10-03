@@ -50,7 +50,7 @@ FIX = ROOT / "tests" / "fixtures"
 TABLE = json.loads((FIX / "live_table.json").read_text(encoding="utf-8"))["rows"]
 NAMES = ["rename_button", "find_mrr", "refactor_billing", "security_review", "storefront_hub", "caption_listings"]
 TOOLS = {"crew_catalog", "crew_check", "crew_budget", "crew_plan"}
-SENTINEL = "sk-synthetic-SENTINEL-7f3a9c-never-real"
+SENTINEL = "synthetic-SENTINEL-7f3a9c-never-real"
 CACHE_DIRS = {".venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 
 Probe = Callable[[ClientSession], Awaitable[Any]]
