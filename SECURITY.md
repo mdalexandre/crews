@@ -17,7 +17,7 @@ Include the version, the steps to reproduce and the impact you expect. You can e
 Crews is a Claude Code plugin. Like every plugin, it runs code with your user privileges, outside the Claude Code sandbox:
 
 * four hooks (`hooks/hooks.json`): a seat guard, a check leak warning, a session start line and an inline budget counter. They read the hook payload from Claude Code and exit 0 to allow or 2 to block. Only the seat guard blocks by default (a generic or unplanned subagent dispatch), and only the inline budget, which is off by default, can block a Bash call. All of them fail open.
-* a local MCP server (`server.py`), started with `uv`, offering four tools. It writes plan files, a plan index and run records under `CREWS_HOME` (the plugin data directory under the plugin), and nothing into the plugin install directory.
+* a local MCP server (`server.py`), started with `uv`, offering five tools. It writes plan files, a plan index and run records under `CREWS_HOME` (the plugin data directory under the plugin), and nothing into the plugin install directory.
 
 Review `hooks/hooks.json`, `.mcp.json` and `hooks/*.py` before enabling the plugin.
 

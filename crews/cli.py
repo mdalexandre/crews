@@ -17,6 +17,7 @@ from crews import (
     budget,
     catalog,
     egress,
+    escalate,
     installer,
     judge,
     need_gate,
@@ -786,6 +787,19 @@ def cmd_plan(ns: argparse.Namespace) -> int:
 
 
 
+def cmd_escalate(ns: argparse.Namespace) -> int:
+    try:
+        result = escalate.escalate(_load(ns.catalog), ns.run_dir, ns.role, ns.reason, repair=ns.repair)
+    except (catalog.CatalogError, OSError, json.JSONDecodeError) as exc:
+        print(f"escalate refused: {exc}", file=sys.stderr)
+        return 2
+    if result["status"] != "ok":
+        print(f"escalate blocked: {result['condition']}", file=sys.stderr)
+        return 2
+    _emit(result)
+    return 0
+
+
 def cmd_record(ns: argparse.Namespace) -> int:
     try:
         text, source = record.extract(Path(ns.transcript).expanduser())
@@ -906,6 +920,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--brief-check", dest="brief_check", choices=["off", "live"], default="off",
                    help="gated semantic check brief leak Noul, on top of the always-on regex floor")
     p.set_defaults(fn=cmd_plan)
+    p = sub.add_parser("escalate", help="re-seat one planned role one step up, or repair it in place")
+    p.add_argument("--run-dir", required=True)
+    p.add_argument("--role", required=True)
+    p.add_argument("--reason", required=True, help="the failure that justifies the re-seat")
+    p.add_argument("--repair", action="store_true", help="same seat, failure evidence appended (max 2 per run)")
+    p.set_defaults(fn=cmd_escalate)
     p = sub.add_parser("record", help="extract a subagent hand-back from a transcript and write it as a record")
     p.add_argument("--transcript", required=True, help="the subagent JSONL transcript file")
     p.add_argument("--out", required=True, help="the record file to write")

@@ -2,6 +2,14 @@
 
 All notable changes are recorded here. The format follows Keep a Changelog and the project uses Semantic Versioning (0.y.z: the public interface may still change).
 
+## [Unreleased] 0.2.0
+
+### Added
+
+* `crew_escalate` MCP tool and `crew escalate` verb (`crews/escalate.py`): re-seat one planned role one step up, or repair it in place. Targets match the claude-crews route allowlist (Sonnet low to xhigh, Opus medium to xhigh, never below Sonnet); effort rises first, then model; never below the original seat; never Fable.
+* Per run caps of 4 escalations and 2 repair rounds, counted in `<run dir>/escalations.json`; beyond a cap the result is BLOCKED and names the condition.
+* The escalated call is registered in the plan index, so the seat guard admits exactly that call.
+
 ## [0.1.0]
 
 First public release.

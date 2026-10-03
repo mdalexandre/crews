@@ -232,6 +232,15 @@ Plugin options (asked when the plugin is enabled): `typesafe_api_key` (sensitive
 
 If your organization allows managed hooks only, plugin hooks are disabled. The planner still works; only the enforcement is lost.
 
+## Escalation
+
+When a planned role fails its check or comes back short, re-seat that one role instead of re-planning the crew. `crew_escalate` (MCP) and `crew escalate --run-dir DIR --role NAME --reason TEXT [--repair]` (CLI) share one implementation in `crews/escalate.py`.
+
+* Escalation steps one seat up from the role's current seat, along the same allowlist the claude-crews coordinator uses for a route: Sonnet low, medium, high, xhigh, then Opus medium, high, xhigh. Effort rises first, then model. It never goes below Sonnet or below the original seat, and never to Fable or a `max` effort. A role already at Opus xhigh, or seated on Fable, is refused.
+* `--repair` keeps the same seat and re-dispatches it with the failure evidence appended to the prompt.
+* A run allows at most 4 escalations and 2 repair rounds, counted in `<run dir>/escalations.json`. Past a cap, or for an unknown role, a missing plan, an empty reason, or a role with more than one cell, the result is BLOCKED and names the condition. It never substitutes or downgrades a seat.
+* On success the tool returns one Agent call (`subagent_type`, `description` equal to the role name, `prompt` equal to the original prompt plus an escalation section), with `returns` and `record_path`. The call is registered in the plan index, so the seat guard admits exactly that call and still blocks the same seat with an altered prompt.
+
 ## Optional: the TypeSafe judge
 
 By default nothing in crews calls a network service. The planner is deterministic: you declare the four answers.
@@ -279,7 +288,7 @@ rm -rf ~/.crews
 
 ## Command line
 
-`python3 crew.py --help` lists the verbs. The useful ones: `plan`, `budget`, `record`, `list`, `install --agents-dir DIR`, `check --agents-dir DIR`, `uninstall --agents-dir DIR`. Set `CREWS_HOME` to choose where state is written.
+`python3 crew.py --help` lists the verbs. The useful ones: `plan`, `budget`, `escalate`, `record`, `list`, `install --agents-dir DIR`, `check --agents-dir DIR`, `uninstall --agents-dir DIR`. Set `CREWS_HOME` to choose where state is written.
 
 ## Development
 

@@ -49,7 +49,7 @@ CREW = ROOT / "crew.py"
 FIX = ROOT / "tests" / "fixtures"
 TABLE = json.loads((FIX / "live_table.json").read_text(encoding="utf-8"))["rows"]
 NAMES = ["rename_button", "find_mrr", "refactor_billing", "security_review", "storefront_hub", "caption_listings"]
-TOOLS = {"crew_catalog", "crew_check", "crew_budget", "crew_plan"}
+TOOLS = {"crew_catalog", "crew_check", "crew_budget", "crew_plan", "crew_escalate"}
 SENTINEL = "synthetic-SENTINEL-7f3a9c-never-real"
 CACHE_DIRS = {".venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 
@@ -132,7 +132,7 @@ def test_server_tool_surface() -> None:
     async def probe(s: ClientSession) -> Any:
         return (await s.list_tools()).tools
     tools = serve(probe)
-    assert {t.name for t in tools} == TOOLS and len(tools) == 4
+    assert {t.name for t in tools} == TOOLS and len(tools) == 5
     assert all(t.inputSchema.get("type") == "object" for t in tools)
 
 
