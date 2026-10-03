@@ -6,6 +6,7 @@ Interface
         crew_check    check          read only
         crew_budget   budget         writes <run dir>/budget.json
         crew_plan     plan           writes the plan files in <run dir>/
+        crew_escalate escalate       appends <run dir>/escalations.json and the plan index
     Every tool returns an execution envelope (execution_id, holon_id, contract_version, status, input_reference,
     output, evidence, warnings, errors, started_at, completed_at) and never raises. Status is one of COMPLETED,
     COMPLETED_WITH_WARNINGS, BLOCKED, FAILED; a refusal the CLI reports at exit 2 comes back BLOCKED.
@@ -59,7 +60,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from mcp.server.fastmcp import FastMCP  # noqa: E402
 
-from crews import catalog, cli, installer, judge, paths, planner  # noqa: E402
+from crews import catalog, cli, escalate, installer, judge, paths, planner  # noqa: E402
 
 # OSS-PKG-8: the plugin registration passes the userConfig key as TYPESAFE_API_KEY. An empty or blank value
 # (the key was left unset) is no key at all, so the variable is removed and the judge degrades to off.
@@ -252,6 +253,23 @@ def crew_plan(roles: dict[str, Any] | list[Any] | str, answers: dict[str, Any] |
     inputs = {"roles": roles, "answers": answers, "outage": outage, "judge": judge, "run_dir": run_dir,
               "allow": allow, "force": force, "skills": skills, "brief_check": brief_check, "verbose": verbose}
     return _envelope("crew_plan", inputs, run, body, eid)
+
+
+@mcp.tool(structured_output=False)
+def crew_escalate(run_dir: str, role: str, reason: str, repair: bool = False) -> dict[str, Any]:
+    """Re-seat one planned role one step up (effort first, then model; never below its original seat; Fable only
+    for need specialist), or with repair=true re-dispatch the same seat with the failure evidence appended.
+    Twin of `crew escalate`. Caps per run dir: 4 escalations and 2 repair rounds; beyond a cap the result is
+    BLOCKED naming the condition. Returns the Agent call to issue (subagent_type, description = role name,
+    prompt), returns and record_path; the new call is registered in the plan index so the seat guard admits
+    exactly it. Appends to <run dir>/escalations.json. The server dispatches nothing."""
+    def body(cat: dict[str, Any]) -> Outcome:
+        res = escalate.escalate(cat, run_dir, role, reason, repair=repair)
+        if res["status"] != "ok":
+            return Outcome(res, errors=[f"escalation blocked: {res['condition']}"])
+        return Outcome(res, warnings=list(res.get("notes") or []))
+    inputs = {"run_dir": run_dir, "role": role, "reason": reason, "repair": repair}
+    return _envelope("crew_escalate", inputs, Path(run_dir).expanduser(), body, uuid.uuid4().hex)
 
 
 if __name__ == "__main__":
