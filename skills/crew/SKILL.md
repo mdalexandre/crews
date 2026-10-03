@@ -117,7 +117,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/crew.py record --transcript <agent output file> --
 
 ## Escalation and repair
 
-When a role fails or its check fails, call `crew_escalate` with `run_dir`, `role`, `reason` (and `repair: true` to re-run the same seat with the failure evidence appended). It returns one Agent call: copy `subagent_type`, `description` and `prompt` verbatim and dispatch it, then record the hand-back to the returned `record_path`. A call steps one seat up (effort first, then model), never below the original seat, and Fable only for need `specialist`. A run allows 4 escalations and 2 repair rounds; beyond that the result is BLOCKED naming the condition, and the decision returns to the owner. A role with several cells cannot be escalated. Never improvise a stronger seat: the seat guard admits only the returned call.
+When a role fails or its check fails, call `crew_escalate` with `run_dir`, `role`, `reason` (and `repair: true` to re-run the same seat with the failure evidence appended). It returns one Agent call: copy `subagent_type`, `description` and `prompt` verbatim and dispatch it, then record the hand-back to the returned `record_path`. A call steps one seat up (effort first, then model) along the allowlist Sonnet low, medium, high, xhigh, then Opus medium, high, xhigh. It never goes below Sonnet or below the original seat, and never to Fable or a `max` effort. A run allows 4 escalations and 2 repair rounds; beyond that the result is BLOCKED naming the condition, and the decision returns to the owner. A role with several cells cannot be escalated. Never improvise a stronger seat: the seat guard admits only the returned call.
 
 ## Return modes
 

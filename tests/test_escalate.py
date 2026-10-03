@@ -35,19 +35,34 @@ def role_of(run: Path, kind: str) -> str:
 def test_effort_steps_up_before_model() -> None:
     step = escalate.next_seat
     assert step(CAT, "produce", "sonnet", "low", "repeatable_task") == escalate.NextSeat("sonnet", "medium")
-    assert step(CAT, "produce", "sonnet", "xhigh", "repeatable_task") == escalate.NextSeat("sonnet", "max")
+    assert step(CAT, "produce", "sonnet", "high", "repeatable_task") == escalate.NextSeat("sonnet", "xhigh")
+    assert step(CAT, "produce", "opus", "medium", "x") == escalate.NextSeat("opus", "high")
 
 
-def test_model_steps_up_at_lowest_effort_when_effort_is_exhausted() -> None:
-    assert escalate.next_seat(CAT, "produce", "sonnet", "max", "x") == escalate.NextSeat("opus", "low")
+def test_model_steps_up_at_lowest_allowlisted_effort() -> None:
+    assert escalate.next_seat(CAT, "produce", "sonnet", "xhigh", "x") == escalate.NextSeat("opus", "medium")
+    assert escalate.next_seat(CAT, "produce", "sonnet", "max", "x") == escalate.NextSeat("opus", "medium")
+    assert escalate.next_seat(CAT, "produce", "opus", "low", "x") == escalate.NextSeat("opus", "medium")
+
+
+def test_never_below_baseline_model() -> None:
     assert escalate.next_seat(CAT, "produce", "haiku", None, "x") == escalate.NextSeat("sonnet", "low")
 
 
-def test_fable_only_for_specialist() -> None:
-    assert escalate.next_seat(CAT, "produce", "opus", "max", "difficult_review").refusal
-    assert escalate.next_seat(CAT, "produce", "opus", "max", "specialist") == escalate.NextSeat("fable", "low")
-    top = escalate.next_seat(CAT, "produce", "fable", "max", "specialist")
-    assert top.model is None and top.refusal
+def test_targets_stay_on_the_private_allowlist() -> None:
+    for need in ("repeatable_task", "specialist"):
+        for model in CAT["capability"]:
+            for effort in (None,) if model == "haiku" else CAT["effort_ladder"]:
+                step = escalate.next_seat(CAT, "produce", model, effort, need)
+                if step.model is not None:
+                    assert step.model != "fable" and step.model != "haiku"
+                    assert (step.effort or "") in escalate.ALLOWLIST[step.model]
+
+
+def test_top_of_allowlist_and_fable_are_refused() -> None:
+    for model, effort in (("opus", "xhigh"), ("opus", "max"), ("fable", "low"), ("fable", "max")):
+        step = escalate.next_seat(CAT, "produce", model, effort, "specialist")
+        assert step.model is None and step.refusal
 
 
 def test_never_weaker_than_the_current_seat() -> None:
@@ -102,10 +117,11 @@ def test_unknown_role_missing_plan_and_empty_reason_are_blocked(tmp_path: Path) 
 
 
 def test_model_step_in_a_run(tmp_path: Path) -> None:
-    run = planned(tmp_path, "security_review")
-    role = "service-key-leak-hunter"
-    seats = [escalate.escalate(CAT, str(run), role, "r")["seat"]["seat_file"] for _ in range(2)]
-    assert seats[-1].startswith("crew-produce-opus-") and seats[0] != seats[1]
+    run = planned(tmp_path)
+    role = role_of(run, "produce")
+    seats = [escalate.escalate(CAT, str(run), role, "r")["seat"]["seat_file"] for _ in range(4)]
+    assert seats == ["crew-produce-sonnet-medium", "crew-produce-sonnet-high",
+                     "crew-produce-sonnet-xhigh", "crew-produce-opus-medium"]
 
 
 def test_guard_admits_the_returned_call_and_blocks_an_altered_prompt(tmp_path: Path) -> None:

@@ -2,10 +2,10 @@
 
 Interface
     next_seat(cat, kind, model, effort, need) -> NextSeat
-        One step up from a seat: effort first, along the catalog effort ladder; at the top of the ladder (or for
-        a model that takes no effort) the next stronger model at the lowest catalog effort. Fable is reachable
-        only when need equals the catalog fable_need (specialist). When no step exists the result carries a
-        refusal naming the condition; a seat is never weakened and never substituted.
+        The next stronger seat on ALLOWLIST (sonnet low to xhigh, then opus medium to xhigh) whose model is no
+        weaker than BASELINE_MODEL: effort first, then model. Fable and off allowlist efforts (max, opus low)
+        are never targets. When no step exists the result carries a refusal naming the condition; a seat is
+        never weakened and never substituted.
     escalate(cat, run_dir, role, reason, repair=False) -> dict
         repair False: re-seat the role one step up. repair True: same seat, with the failure evidence appended.
         Reads <run dir>/plan.json and roles.json, counts <run dir>/escalations.json, and caps a run at
@@ -39,31 +39,39 @@ class NextSeat:
     refusal: str | None = None
 
 
+# Escalation targets match the claude-crews route policy (crews/orchestrator/route.py): a target must be on
+# ALLOWLIST and its model must be no weaker than BASELINE_MODEL. Fable is not on the allowlist.
+ALLOWLIST: dict[str, list[str]] = {
+    "sonnet": ["low", "medium", "high", "xhigh"],
+    "opus": ["medium", "high", "xhigh"],
+    "haiku": [""],
+}
+BASELINE_MODEL = "sonnet"
+
+
 def _rank(cat: dict[str, Any], model: str, effort: str | None) -> tuple[int, int]:
     ladder: list[str] = cat["effort_ladder"]
-    return cat["capability"].index(model), (ladder.index(effort) if effort is not None else -1)
+    return cat["capability"].index(model), (ladder.index(effort) if effort else -1)
 
 
 def next_seat(cat: dict[str, Any], kind: str, model: str, effort: str | None, need: str) -> NextSeat:
     ladder: list[str] = cat["effort_ladder"]
     capability: list[str] = cat["capability"]
-    no_effort = set(cat.get("no_effort_models") or [])
     if model not in capability:
         return NextSeat(None, None, f"model {model!r} is not in the catalog capability order")
-    if model not in no_effort:
-        if effort not in ladder:
-            return NextSeat(None, None, f"effort {effort!r} is not on the catalog effort ladder")
-        if effort != ladder[-1]:
-            return NextSeat(model, ladder[ladder.index(effort) + 1])
-    for candidate in capability[capability.index(model) + 1:]:
-        if candidate == "fable" and need != cat["fable_need"]:
+    if effort and effort not in ladder:
+        return NextSeat(None, None, f"effort {effort!r} is not on the catalog effort ladder")
+    here = _rank(cat, model, effort)
+    floor = capability.index(BASELINE_MODEL)
+    for m in capability:
+        if m not in ALLOWLIST or capability.index(m) < floor:
             continue
-        return NextSeat(candidate, None if candidate in no_effort else ladder[0])
+        for e in ALLOWLIST[m]:
+            if _rank(cat, m, e or None) > here:
+                return NextSeat(m, e or None)
     top = f"{model} at {effort}" if effort else model
-    if "fable" in capability and model != "fable" and need != cat["fable_need"]:
-        return NextSeat(None, None, f"{kind} seat {top} is the strongest seat reachable for need {need}; "
-                                    f"fable is reserved for need {cat['fable_need']}")
-    return NextSeat(None, None, f"{kind} seat {top} is the top of the catalog; no stronger seat exists")
+    return NextSeat(None, None, f"{kind} seat {top} is at or above the top of the allowlist; "
+                                f"no stronger allowlisted seat exists")
 
 
 def _blocked(condition: str) -> dict[str, Any]:
